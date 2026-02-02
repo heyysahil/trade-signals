@@ -98,6 +98,41 @@ def _password_reset_email_html(name: str, reset_url: str) -> str:
     </html>
     """
 
+
+def send_admin_password_reset_email(admin, reset_url):
+    """
+    Send password reset email to admin with reset link.
+    admin: Admin model instance; reset_url: full URL to admin reset-password page with token.
+    """
+    if not mail.app:
+        raise RuntimeError("Mail extension not initialized.")
+    if not current_app.config.get("MAIL_SERVER") or not current_app.config.get("MAIL_USERNAME"):
+        raise RuntimeError("MAIL_SERVER and MAIL_USERNAME must be set to send admin reset email.")
+    name = admin.username or admin.email
+    subject = "Reset Your Admin Password - Trade Signals"
+    body = f"""
+Hello {name},
+
+You requested to reset your admin password for Trade Signals.
+
+Click the link below to reset your password:
+{reset_url}
+
+This link will expire in 1 hour.
+
+If you did not request this, please ignore this email. Your password will remain unchanged.
+
+Trade Signals Admin
+"""
+    html = _password_reset_email_html(name, reset_url)
+    msg = Message(subject=subject, recipients=[admin.email], body=body, html=html)
+    try:
+        mail.send(msg)
+    except Exception as e:
+        current_app.logger.error("SMTP error sending admin password reset to %s: %s", admin.email, e, exc_info=True)
+        raise
+
+
 def send_welcome_email(user):
     """Send welcome email to new user"""
     # TODO: Implement welcome email

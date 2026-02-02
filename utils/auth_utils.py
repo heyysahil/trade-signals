@@ -71,3 +71,49 @@ def verify_reset_token(token):
         return user
     except Exception:
         return None
+
+
+def generate_admin_reset_token(admin):
+    """
+    Generate password reset token for admin.
+    Returns a signed token that expires in 1 hour.
+    """
+    expiry = int(time.time()) + RESET_TOKEN_LIFETIME_SECONDS
+    payload = f"admin|{admin.id}|{admin.email.strip().lower()}|{expiry}"
+    key = current_app.config.get("SECRET_KEY", "").encode("utf-8")
+    sig = hmac.new(key, payload.encode("utf-8"), "sha256").hexdigest()
+    raw = f"{payload}|{sig}"
+    return base64.urlsafe_b64encode(raw.encode("utf-8")).decode("utf-8").rstrip("=")
+
+
+def verify_admin_reset_token(token):
+    """
+    Verify admin password reset token and return Admin if valid, else None.
+    """
+    from models.admin import Admin
+
+    if not token or not isinstance(token, str):
+        return None
+    try:
+        raw = base64.urlsafe_b64decode(token + "==").decode("utf-8")
+        parts = raw.rsplit("|", 1)
+        if len(parts) != 2:
+            return None
+        payload, sig = parts
+        key = current_app.config.get("SECRET_KEY", "").encode("utf-8")
+        expected = hmac.new(key, payload.encode("utf-8"), "sha256").hexdigest()
+        if not hmac.compare_digest(sig, expected):
+            return None
+        # payload: admin|id|email|expiry
+        segs = payload.split("|", 3)
+        if len(segs) != 4 or segs[0] != "admin":
+            return None
+        _, admin_id_str, email, expiry_str = segs
+        if int(expiry_str) < int(time.time()):
+            return None
+        admin = Admin.query.get(int(admin_id_str))
+        if not admin or admin.email.strip().lower() != email:
+            return None
+        return admin
+    except Exception:
+        return None

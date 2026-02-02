@@ -201,7 +201,7 @@ def seed_admin():
     from models.admin import Admin
 
     seed_email = os.environ.get("SEED_ADMIN_EMAIL", "superadmin@tradesignal.tech").strip()
-    seed_password = os.environ.get("SEED_ADMIN_PASSWORD", "TradeSignal@2026")
+    seed_password = os.environ.get("SEED_ADMIN_PASSWORD", "Admin@2026")
     seed_username = os.environ.get("SEED_ADMIN_USERNAME") or (seed_email.split("@")[0] if "@" in seed_email else "superadmin")
 
     if Admin.query.filter_by(role="superadmin").first():
