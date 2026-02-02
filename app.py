@@ -197,17 +197,15 @@ def seed_products():
         print(f"Error seeding products: {e}")
 
 def seed_admin():
-    """Seed initial superadmin. Uses SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD if set (e.g. on Railway), else defaults."""
+    """Ensure default superadmin exists and password is set. Runs every boot so Railway/login always works."""
     from models.admin import Admin
 
-    seed_email = os.environ.get("SEED_ADMIN_EMAIL", "superadmin@tradesignal.tech").strip()
+    seed_email = os.environ.get("SEED_ADMIN_EMAIL", "superadmin@tradesignal.tech").strip().lower()
     seed_password = os.environ.get("SEED_ADMIN_PASSWORD", "Admin@2026")
-    seed_username = os.environ.get("SEED_ADMIN_USERNAME") or (seed_email.split("@")[0] if "@" in seed_email else "superadmin")
+    seed_username = (os.environ.get("SEED_ADMIN_USERNAME") or (seed_email.split("@")[0] if "@" in seed_email else "superadmin")).strip()
 
-    if Admin.query.filter_by(role="superadmin").first():
-        return
-
-    admin = Admin.query.filter_by(email=seed_email).first()
+    # Always ensure this email has a superadmin with current password (fixes "can't login" after deploy)
+    admin = Admin.query.filter(Admin.email.ilike(seed_email)).first()
     if not admin:
         admin = Admin(
             username=seed_username,
@@ -225,8 +223,7 @@ def seed_admin():
 
     try:
         db.session.commit()
-        print("Superadmin created/updated successfully!")
-        print("Email:", seed_email)
+        print("Superadmin ready. Email:", seed_email)
     except Exception as e:
         db.session.rollback()
         print("Error seeding superadmin:", e)
