@@ -197,39 +197,39 @@ def seed_products():
         print(f"Error seeding products: {e}")
 
 def seed_admin():
-    """Seed initial superadmin user if database is empty"""
+    """Seed initial superadmin. Uses SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD if set (e.g. on Railway), else defaults."""
     from models.admin import Admin
-    
-    # Check if superadmin already exists
-    if Admin.query.filter_by(role='superadmin').first():
+
+    seed_email = os.environ.get("SEED_ADMIN_EMAIL", "superadmin@tradesignal.tech").strip()
+    seed_password = os.environ.get("SEED_ADMIN_PASSWORD", "TradeSignal@2026")
+    seed_username = os.environ.get("SEED_ADMIN_USERNAME") or (seed_email.split("@")[0] if "@" in seed_email else "superadmin")
+
+    if Admin.query.filter_by(role="superadmin").first():
         return
-    
-    # Create or update superadmin
-    admin = Admin.query.filter_by(email='superadmin@tradesignal.tech').first()
+
+    admin = Admin.query.filter_by(email=seed_email).first()
     if not admin:
         admin = Admin(
-            username='superadmin',
-            email='superadmin@tradesignal.tech',
-            role='superadmin',
-            is_active=True
+            username=seed_username,
+            email=seed_email,
+            role="superadmin",
+            is_active=True,
         )
         db.session.add(admin)
     else:
-        # Update existing admin to superadmin
-        admin.username = 'superadmin'
-        admin.role = 'superadmin'
+        admin.username = seed_username
+        admin.role = "superadmin"
         admin.is_active = True
-    
-    admin.set_password('TradeSignal@2026')  # Default password - change in production!
-    
+
+    admin.set_password(seed_password)
+
     try:
         db.session.commit()
         print("Superadmin created/updated successfully!")
-        print("Email: superadmin@tradesignal.tech")
-        print("Password: TradeSignal@2026")
+        print("Email:", seed_email)
     except Exception as e:
         db.session.rollback()
-        print(f"Error seeding superadmin: {e}")
+        print("Error seeding superadmin:", e)
 
 # WSGI entry point (Railway/Render/cPanel): gunicorn app:app
 app = create_app()
