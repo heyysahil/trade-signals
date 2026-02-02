@@ -1,6 +1,7 @@
 """
 Main Flask application entry point for sendsignals
 """
+import os
 from flask import Flask, jsonify, request, redirect
 from flask_login import LoginManager
 from config import Config
@@ -8,44 +9,44 @@ from models import db
 from models.user import User
 from utils.mail import mail
 
-# Initialize login manager
+# Initialize login manager (no DB access at import time)
 login_manager = LoginManager()
-login_manager.login_view = 'auth.login'
-login_manager.login_message = 'Please log in to access this page.'
-login_manager.login_message_category = 'info'
+login_manager.login_view = "auth.login"
+login_manager.login_message = "Please log in to access this page."
+login_manager.login_message_category = "info"
+
 
 @login_manager.user_loader
 def load_user(user_id):
-    """Load user for Flask-Login"""
+    """Load user for Flask-Login (runs in request context)."""
     return User.query.get(int(user_id))
 
+
 def create_app(config_class=Config):
-    """Application factory pattern"""
+    """Application factory pattern. DB init runs inside app_context; non-fatal on failure."""
     app = Flask(__name__)
     app.config.from_object(config_class)
-    
-    # Initialize extensions
+
     db.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
-    
-    # Error handler for API routes to always return JSON
+
     @app.errorhandler(500)
     def handle_500_error(e):
-        """Handle 500 errors and return JSON for API routes"""
-        if request.path.startswith('/auth/'):
+        if request.path.startswith("/auth/"):
             return jsonify({"success": False, "message": "Internal server error. Please try again later."}), 500
-        # For non-API routes, return the default Flask error page
         return None
-    
-    # Create database tables
+
+    # Create tables and seed only inside app context; do not crash if DB temporarily unavailable
     with app.app_context():
-        db.create_all()
-        # Seed initial products if database is empty
-        seed_products()
-        # Seed initial admin if database is empty
-        seed_admin()
-    
+        try:
+            db.create_all()
+            seed_products()
+            seed_admin()
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning("Database init/seed skipped (non-fatal): %s", e)
+
     # Register blueprints
     from routes import public_bp, auth_bp
     from routes.user.dashboard import dashboard_bp as user_dashboard_bp
@@ -230,9 +231,10 @@ def seed_admin():
         db.session.rollback()
         print(f"Error seeding superadmin: {e}")
 
-# WSGI entry point for cPanel/Passenger (application = Flask app)
+# WSGI entry point (Railway/Render/cPanel): gunicorn app:app
 app = create_app()
 application = app
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port, debug=os.environ.get("FLASK_DEBUG", "false").lower() in ("true", "1"))
