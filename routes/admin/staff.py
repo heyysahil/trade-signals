@@ -103,7 +103,7 @@ def create_staff():
             db.session.rollback()
             flash(f'Error creating staff: {e}', 'error')
     
-    return render_template('admin/staff_form.html', staff=None, product_categories=PRODUCT_CATEGORIES)
+    return render_template('admin/staff_form.html', staff=None, form=None, product_categories=PRODUCT_CATEGORIES)
 
 @staff_bp.route('/staff/<int:staff_id>/edit', methods=['GET', 'POST'])
 @admin_required

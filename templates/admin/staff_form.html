@@ -1,14 +1,17 @@
 {% extends "admin/layout.html" %}
 
-{% block title %}{% if staff is defined and staff %}Edit Staff{% else %}Add Staff{% endif %} - Admin{% endblock %}
+{% set staff_obj = staff if staff is defined else None %}
+{% set form_obj = form if form is defined else None %}
+
+{% block title %}{% if staff_obj %}Edit Staff{% else %}Add Staff{% endif %} - Admin{% endblock %}
 
 {% block content %}
 <!-- Page Header -->
 <div class="admin-page-header fade-in-on-scroll">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
-            <h1>{% if staff is defined and staff %}Edit Staff Member{% else %}Add New Staff{% endif %}</h1>
-            <p class="admin-page-subtitle">{% if staff is defined and staff %}Update staff member details{% else %}Create a new staff account{% endif %}</p>
+            <h1>{% if staff_obj %}Edit Staff Member{% else %}Add New Staff{% endif %}</h1>
+            <p class="admin-page-subtitle">{% if staff_obj %}Update staff member details{% else %}Create a new staff account{% endif %}</p>
         </div>
         <a href="{{ url_for('admin_staff.staff') }}" class="admin-btn admin-btn-secondary">
             ← Back to Staff List
@@ -18,7 +21,7 @@
 
 <!-- Staff Form -->
 <div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.2s;">
-    <form method="POST" action="{% if staff is defined and staff %}{{ url_for('admin_staff.edit_staff', staff_id=staff.id) }}{% else %}{{ url_for('admin_staff.create_staff') }}{% endif %}">
+    <form method="POST" action="{% if staff_obj %}{{ url_for('admin_staff.edit_staff', staff_id=staff_obj.id) }}{% else %}{{ url_for('admin_staff.create_staff') }}{% endif %}">
         <div style="display: grid; gap: 1.5rem;">
             <div class="form-group">
                 <label for="username">Username *</label>
@@ -27,7 +30,7 @@
                     id="username" 
                     name="username" 
                     required
-                    value="{{ staff.username if staff is defined and staff else (form.username if form else '') }}"
+                    value="{{ staff_obj.username if staff_obj else (form_obj.username if form_obj else '') }}"
                     placeholder="Enter username"
                 >
             </div>
@@ -39,7 +42,7 @@
                     id="email" 
                     name="email" 
                     required
-                    value="{{ staff.email if staff is defined and staff else (form.email if form else '') }}"
+                    value="{{ staff_obj.email if staff_obj else (form_obj.email if form_obj else '') }}"
                     placeholder="Enter email address"
                 >
             </div>
@@ -49,7 +52,7 @@
                 <select id="product_category" name="product_category">
                     <option value="">None (Superadmin)</option>
                     {% for category in product_categories %}
-                    <option value="{{ category }}" {% if staff is defined and staff and staff.product_category == category %}selected{% endif %}>{{ category }}</option>
+                    <option value="{{ category }}" {% if staff_obj and staff_obj.product_category == category %}selected{% endif %}>{{ category }}</option>
                     {% endfor %}
                 </select>
                 <small style="color: var(--text-gray); display: block; margin-top: 0.5rem;">
@@ -57,7 +60,7 @@
                 </small>
             </div>
 
-            {% if staff is not defined or not staff %}
+            {% if not staff_obj %}
             <div class="form-group">
                 <label for="password">Password *</label>
                 <input 
@@ -76,7 +79,7 @@
                     <input 
                         type="checkbox" 
                         name="is_active" 
-                        {% if (staff is defined and staff and staff.is_active) or (staff is not defined or not staff) %}checked{% endif %}
+                        {% if (staff_obj and staff_obj.is_active) or (not staff_obj) %}checked{% endif %}
                         style="width: auto;"
                     >
                     <span>Active Account</span>
@@ -86,7 +89,7 @@
             <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                 <button type="submit" class="admin-btn admin-btn-primary">
                     <span>💾</span>
-                    {% if staff is defined and staff %}Update Staff{% else %}Create Staff{% endif %}
+                    {% if staff_obj %}Update Staff{% else %}Create Staff{% endif %}
                 </button>
                 <a href="{{ url_for('admin_staff.staff') }}" class="admin-btn admin-btn-secondary">
                     Cancel
@@ -96,7 +99,7 @@
     </form>
 </div>
 
-{% if staff is defined and staff %}
+{% if staff_obj %}
 <!-- Reset Password Card (Edit only) -->
 <div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.25s;">
     <h2 style="margin-bottom: 1.5rem; color: var(--text-white);">Reset Password</h2>
@@ -118,12 +121,12 @@
 {% endif %}
 {% endblock %}
 
-{% if staff is defined and staff %}
+{% if staff_obj %}
 {% block extra_js %}
 <script>
 (function() {
-    var staffId = {{ staff.id if staff is defined and staff else 'null' }};
-    var staffName = {{ (staff.username if staff is defined and staff else '')|tojson }};
+    var staffId = {{ staff_obj.id }};
+    var staffName = {{ staff_obj.username|tojson }};
     var newPasswordEl = document.getElementById('newPassword');
     var confirmPasswordEl = document.getElementById('confirmPassword');
     var resetBtn = document.getElementById('resetPasswordBtn');
