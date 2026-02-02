@@ -1,0 +1,138 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Admin Dashboard - Trade Signals{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header fade-in-on-scroll">
+    <h1>Dashboard</h1>
+    <p class="admin-page-subtitle">Key metrics and products overview</p>
+</div>
+
+<!-- Summary Cards -->
+<div class="admin-summary-cards">
+    <!-- Active Customers -->
+    <a href="{{ url_for('admin_customers.customers', status='active') }}" class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.05s; cursor: pointer; text-decoration: none;">
+        <div class="admin-summary-label">Active Customers</div>
+        <div class="admin-summary-value">{{ active_customers_count }}</div>
+        <div class="admin-summary-trends">
+            <span class="trend-badge">Today: {{ active_customers_today }}</span>
+            <span class="trend-badge">Week: {{ active_customers_week }}</span>
+        </div>
+    </a>
+    
+    <!-- Inactive Customers -->
+    <a href="{{ url_for('admin_customers.customers', status='inactive') }}" class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.1s; cursor: pointer; text-decoration: none;">
+        <div class="admin-summary-label">Inactive Customers</div>
+        <div class="admin-summary-value">{{ inactive_customers_count }}</div>
+        <div class="admin-summary-trends">
+            <span class="trend-badge muted">No active subscriptions</span>
+        </div>
+    </a>
+    
+    <!-- Pending Subscriptions -->
+    <a href="{{ url_for('admin_subscriptions.subscriptions', status='pending') }}" class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.15s; cursor: pointer; text-decoration: none;">
+        <div class="admin-summary-label">Pending Subscriptions</div>
+        <div class="admin-summary-value">{{ pending_subscriptions_count }}</div>
+        <div class="admin-summary-trends">
+            <span class="trend-badge warning">Today: {{ pending_subscriptions_today }}</span>
+            <span class="trend-badge warning">Week: {{ pending_subscriptions_week }}</span>
+        </div>
+    </a>
+    
+    <!-- Active Subscriptions -->
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.2s;">
+        <div class="admin-summary-label">Active Subscriptions</div>
+        <div class="admin-summary-value">{{ active_subscriptions_count }}</div>
+        <div class="admin-summary-trends">
+            <span class="trend-badge">Today: {{ active_subscriptions_today }}</span>
+            <span class="trend-badge">Week: {{ active_subscriptions_week }}</span>
+        </div>
+    </div>
+    
+    <!-- Expired Subscriptions -->
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.25s;">
+        <div class="admin-summary-label">Expired Subscriptions</div>
+        <div class="admin-summary-value">{{ expired_subscriptions_count }}</div>
+        <div class="admin-summary-trends">
+            <span class="trend-badge muted">Today: {{ expired_subscriptions_today }}</span>
+            <span class="trend-badge muted">Week: {{ expired_subscriptions_week }}</span>
+        </div>
+    </div>
+    
+    <!-- Total Revenue -->
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.3s;">
+        <div class="admin-summary-label">Total Revenue</div>
+        <div class="admin-summary-value">₹{{ "%.0f"|format(total_revenue) }}</div>
+        <div class="admin-summary-trends">
+            <span class="trend-badge success">Today: ₹{{ "%.0f"|format(revenue_today) }}</span>
+            <span class="trend-badge success">Week: ₹{{ "%.0f"|format(revenue_week) }}</span>
+        </div>
+    </div>
+    
+    <!-- Total Signals -->
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.35s;">
+        <div class="admin-summary-label">Total Signals Generated</div>
+        <div class="admin-summary-value">{{ total_signals }}</div>
+        <div class="admin-summary-trends">
+            <span class="trend-badge">Today: {{ signals_today }}</span>
+            <span class="trend-badge">Week: {{ signals_week }}</span>
+        </div>
+    </div>
+    
+    <!-- Pending Admin Actions -->
+    <a href="{{ url_for('admin_subscriptions.subscriptions', status='pending') }}" class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.4s; cursor: pointer; text-decoration: none;">
+        <div class="admin-summary-label">Pending Admin Actions</div>
+        <div class="admin-summary-value" style="color: var(--admin-danger);">{{ pending_admin_actions }}</div>
+        <div class="admin-summary-trends">
+            <span class="trend-badge danger">Today: {{ pending_admin_actions_today }}</span>
+            <span class="trend-badge danger">Week: {{ pending_admin_actions_week }}</span>
+        </div>
+    </a>
+</div>
+
+<!-- Signals by Product Section - Superadmin Only -->
+{% if is_superadmin %}
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.3s;">
+    <div class="admin-table-header">
+        <h2>Signals by Product</h2>
+    </div>
+    <div class="table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Package</th>
+                    <th>Total Signals</th>
+                    <th>Winners</th>
+                    <th>Losers</th>
+                    <th>In Progress</th>
+                    <th>Total Profit</th>
+                    <th>Net Profit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if signals_by_product %}
+                    {% for product_data in signals_by_product %}
+                    <tr>
+                        <td><strong>{{ product_data.name or 'N/A' }}</strong></td>
+                        <td>{{ product_data.total_signals or 0 }}</td>
+                        <td><span class="admin-badge admin-badge-success">{{ product_data.winners or 0 }}</span></td>
+                        <td><span class="admin-badge admin-badge-danger">{{ product_data.losers or 0 }}</span></td>
+                        <td><span class="admin-badge admin-badge-warning">{{ product_data.in_progress or 0 }}</span></td>
+                        <td>Rs {{ "%.2f"|format(product_data.total_profit or 0) }}</td>
+                        <td>Rs {{ "%.2f"|format(product_data.total_profit or 0) }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="admin-empty-state">
+                            <p>No signals data available</p>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

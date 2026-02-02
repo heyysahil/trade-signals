@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ product.name }} - Trade Signals{% endblock %}
+
+{% block content %}
+<div class="product-detail-page">
+    <div class="container">
+        <!-- Product Header -->
+        <div class="product-header">
+            <a href="{{ url_for('user_products.products') }}" class="back-link">← Back to Packages</a>
+            <h1>{{ product.name }} Trading Signals</h1>
+            <p class="product-subtitle">{{ product.description if product.description else 'Premium trading signals for this product category.' }}</p>
+        </div>
+
+        <!-- Pricing Plans -->
+        <div class="pricing-plans">
+            <h2 class="section-title">Choose Your Plan</h2>
+            
+            <div class="plans-grid">
+                <!-- Trial Plan -->
+                <div class="plan-card">
+                    <div class="plan-header">
+                        <h3>Trial Plan</h3>
+                    </div>
+                    <div class="plan-price">
+                        <span class="price-amount">Rs 0</span>
+                        <span class="price-duration">3 days</span>
+                    </div>
+                    <div class="plan-features">
+                        <ul>
+                            <li>Full access to signals</li>
+                            <li>Real-time updates</li>
+                            <li>Email support</li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('user_subscriptions.subscription_confirm', product_id=product.id, plan_type='trial') }}" class="btn btn-outline btn-block">
+                        Start Trial
+                    </a>
+                </div>
+
+                <!-- Monthly Plan -->
+                <div class="plan-card plan-featured">
+                    <div class="plan-badge">Most Popular</div>
+                    <div class="plan-header">
+                        <h3>Monthly Plan</h3>
+                    </div>
+                    <div class="plan-price">
+                        <span class="price-amount">Rs {{ "%.0f"|format(product.price) if product.price > 0 else "3000" }}</span>
+                        <span class="price-duration">per month</span>
+                    </div>
+                    <div class="plan-features">
+                        <ul>
+                            <li>Full access to signals</li>
+                            <li>Real-time updates</li>
+                            <li>Priority support</li>
+                            <li>Advanced analytics</li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('user_subscriptions.subscription_confirm', product_id=product.id, plan_type='monthly') }}" class="btn btn-primary btn-block">
+                        Subscribe Now
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trust & Assurance -->
+        <div class="trust-block">
+            <div class="trust-container">
+                <div class="trust-item">
+                    <div class="trust-icon">
+                        <i data-lucide="check-circle"></i>
+                    </div>
+                    <div class="trust-content">
+                        <h4>7-Day Free Trial</h4>
+                        <p>Try our service risk-free</p>
+                    </div>
+                </div>
+                <div class="trust-divider"></div>
+                <div class="trust-item">
+                    <div class="trust-icon">
+                        <i data-lucide="refresh-cw"></i>
+                    </div>
+                    <div class="trust-content">
+                        <h4>Cancel Anytime</h4>
+                        <p>No long-term commitments</p>
+                    </div>
+                </div>
+                <div class="trust-divider"></div>
+                <div class="trust-item">
+                    <div class="trust-icon">
+                        <i data-lucide="shield-check"></i>
+                    </div>
+                    <div class="trust-content">
+                        <h4>Money-Back Guarantee</h4>
+                        <p>30-day full refund policy</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

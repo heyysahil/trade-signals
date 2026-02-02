@@ -1,0 +1,286 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Subscription Management - Admin{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header fade-in-on-scroll">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>Subscription Management Dashboard</h1>
+            <p class="admin-page-subtitle">Manage customer subscriptions and plans</p>
+        </div>
+        <a href="{{ url_for('admin_subscriptions.start_subscription') }}" class="admin-btn admin-btn-primary">
+            <span>➕</span> Start Subscription
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="admin-summary-cards">
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.1s;">
+        <div class="admin-summary-label">Total Customers</div>
+        <div class="admin-summary-value">{{ total_customers }}</div>
+        <span class="admin-summary-badge">
+            Active: {{ active_customers_count }} · Inactive: {{ inactive_customers_count }}
+        </span>
+    </div>
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.2s;">
+        <div class="admin-summary-label">Monthly Revenue</div>
+        <div class="admin-summary-value">Rs {{ "%.2f"|format(monthly_revenue) }}</div>
+    </div>
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.3s;">
+        <div class="admin-summary-label">New This Month</div>
+        <div class="admin-summary-value">{{ new_this_month }}</div>
+    </div>
+</div>
+
+<!-- Filters Section -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.5s;">
+    <div class="admin-table-header">
+        <h2>Filters</h2>
+    </div>
+    <form method="GET" action="{{ url_for('admin_subscriptions.subscriptions') }}" class="admin-filters-form">
+        <div class="form-group">
+            <label for="customer">Customer</label>
+            <select id="customer" name="customer">
+                <option value="">All Customers</option>
+                {% for customer in customers %}
+                <option value="{{ customer.id }}" {% if filter_customer_id == customer.id %}selected{% endif %}>
+                    {{ customer.full_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="product">Package</label>
+            <select id="product" name="product">
+                <option value="">All Packages</option>
+                {% for product in products %}
+                <option value="{{ product.id }}" {% if filter_product_id == product.id %}selected{% endif %}>
+                    {{ product.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">All Statuses</option>
+                <option value="approved" {% if filter_status == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="pending" {% if filter_status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="rejected" {% if filter_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                <option value="active" {% if filter_status == 'active' %}selected{% endif %}>Active</option>
+                <option value="expired" {% if filter_status == 'expired' %}selected{% endif %}>Expired</option>
+                <option value="cancelled" {% if filter_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="sort_by">Sort By</label>
+            <select id="sort_by" name="sort_by">
+                <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date Created</option>
+                <option value="customer" {% if sort_by == 'customer' %}selected{% endif %}>Customer</option>
+                <option value="product" {% if sort_by == 'product' %}selected{% endif %}>Product</option>
+            </select>
+        </div>
+        
+        <div class="admin-filters-form-actions">
+            <button type="submit" class="admin-btn admin-btn-primary">Apply Filters</button>
+            <a href="{{ url_for('admin_subscriptions.subscriptions') }}" class="admin-btn admin-btn-secondary">Clear</a>
+        </div>
+    </form>
+</div>
+
+<!-- Trial Subscriptions Section -->
+{% if trial_subscriptions %}
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.6s;">
+    <div class="admin-table-header">
+        <h2>Trial Subscriptions ({{ trial_subscriptions|length }})</h2>
+    </div>
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Subscription ID</th>
+                    <th>Customer Name</th>
+                    <th>Package</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subscription in trial_subscriptions %}
+                <tr>
+                    <td>#{{ subscription.id }}</td>
+                    <td><a href="{{ url_for('admin_customers.view_customer', customer_id=subscription.user_id) }}" style="color: var(--primary-color);">{{ subscription.user.full_name if subscription.user else 'N/A' }}</a></td>
+                    <td>{{ subscription.product.name if subscription.product else 'N/A' }}</td>
+                    <td>{{ subscription.start_date.strftime('%d-%m-%Y') if subscription.start_date else 'N/A' }}</td>
+                    <td>{{ subscription.end_date.strftime('%d-%m-%Y') if subscription.end_date else 'N/A' }}</td>
+                    <td><span class="admin-badge admin-badge-warning">Trial</span></td>
+                    <td>
+                        <a href="{{ url_for('admin_subscriptions.view_subscription', subscription_id=subscription.id) }}" class="admin-btn admin-btn-secondary admin-btn-sm">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Active Paid Subscriptions Section -->
+{% if active_paid_subscriptions %}
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.7s;">
+    <div class="admin-table-header">
+        <h2>Active Paid Subscriptions ({{ active_paid_subscriptions|length }})</h2>
+    </div>
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Subscription ID</th>
+                    <th>Customer Name</th>
+                    <th>Package</th>
+                    <th>Plan Type</th>
+                    <th>Cost</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subscription in active_paid_subscriptions %}
+                <tr>
+                    <td>#{{ subscription.id }}</td>
+                    <td><a href="{{ url_for('admin_customers.view_customer', customer_id=subscription.user_id) }}" style="color: var(--primary-color);">{{ subscription.user.full_name if subscription.user else 'N/A' }}</a></td>
+                    <td>{{ subscription.product.name if subscription.product else 'N/A' }}</td>
+                    <td>
+                        {% set days = (subscription.end_date - subscription.start_date).days %}
+                        {% if days == 30 %}1 Month{% elif days == 90 %}3 Months{% else %}{{ days }} Days{% endif %}
+                    </td>
+                    <td>Rs {{ "%.2f"|format(subscription.product.price) if subscription.product else '0.00' }}</td>
+                    <td>{{ subscription.start_date.strftime('%d-%m-%Y') if subscription.start_date else 'N/A' }}</td>
+                    <td>{{ subscription.end_date.strftime('%d-%m-%Y') if subscription.end_date else 'N/A' }}</td>
+                    <td><span class="admin-badge admin-badge-success">Active</span></td>
+                    <td>
+                        <a href="{{ url_for('admin_subscriptions.view_subscription', subscription_id=subscription.id) }}" class="admin-btn admin-btn-secondary admin-btn-sm">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Expired Subscriptions Section -->
+{% if expired_subscriptions %}
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.8s;">
+    <div class="admin-table-header">
+        <h2>Expired Subscriptions ({{ expired_subscriptions|length }})</h2>
+    </div>
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Subscription ID</th>
+                    <th>Customer Name</th>
+                    <th>Package</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subscription in expired_subscriptions %}
+                <tr>
+                    <td>#{{ subscription.id }}</td>
+                    <td><a href="{{ url_for('admin_customers.view_customer', customer_id=subscription.user_id) }}" style="color: var(--primary-color);">{{ subscription.user.full_name if subscription.user else 'N/A' }}</a></td>
+                    <td>{{ subscription.product.name if subscription.product else 'N/A' }}</td>
+                    <td>{{ subscription.start_date.strftime('%d-%m-%Y') if subscription.start_date else 'N/A' }}</td>
+                    <td>{{ subscription.end_date.strftime('%d-%m-%Y') if subscription.end_date else 'N/A' }}</td>
+                    <td><span class="admin-badge admin-badge-secondary">Expired</span></td>
+                    <td>
+                        <a href="{{ url_for('admin_subscriptions.view_subscription', subscription_id=subscription.id) }}" class="admin-btn admin-btn-secondary admin-btn-sm">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- All Subscriptions (if no grouped data) -->
+{% if not trial_subscriptions and not active_paid_subscriptions and not expired_subscriptions and subscriptions %}
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.6s;">
+    <div class="admin-table-header">
+        <h2>All Subscriptions</h2>
+    </div>
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Subscription ID</th>
+                    <th>Customer Name</th>
+                    <th>Package</th>
+                    <th>Plan Type</th>
+                    <th>Cost</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subscription in subscriptions %}
+                <tr>
+                    <td>#{{ subscription.id }}</td>
+                    <td><a href="{{ url_for('admin_customers.view_customer', customer_id=subscription.user_id) }}" style="color: var(--primary-color);">{{ subscription.user.full_name if subscription.user else 'N/A' }}</a></td>
+                    <td>{{ subscription.product.name if subscription.product else 'N/A' }}</td>
+                    <td>
+                        {% set days = (subscription.end_date - subscription.start_date).days %}
+                        {% if days == 10 %}Trial{% elif days == 30 %}1 Month{% elif days == 90 %}3 Months{% else %}{{ days }} Days{% endif %}
+                    </td>
+                    <td>Rs {{ "%.2f"|format(subscription.product.price) if subscription.product else '0.00' }}</td>
+                    <td>{{ subscription.start_date.strftime('%d-%m-%Y') if subscription.start_date else 'N/A' }}</td>
+                    <td>{{ subscription.end_date.strftime('%d-%m-%Y') if subscription.end_date else 'N/A' }}</td>
+                    <td>
+                        {% if subscription.status == 'active' %}
+                            <span class="admin-badge admin-badge-success">Active</span>
+                        {% elif subscription.status == 'expired' %}
+                            <span class="admin-badge admin-badge-secondary">Expired</span>
+                        {% else %}
+                            <span class="admin-badge admin-badge-warning">{{ subscription.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin_subscriptions.view_subscription', subscription_id=subscription.id) }}" class="admin-btn admin-btn-secondary admin-btn-sm">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Empty State -->
+{% if not trial_subscriptions and not active_paid_subscriptions and not expired_subscriptions and not subscriptions %}
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.6s;">
+    <div class="admin-empty-state" style="padding: 3rem; text-align: center;">
+        <p>No subscriptions found.</p>
+        <a href="{{ url_for('admin_subscriptions.start_subscription') }}" class="admin-btn admin-btn-primary">
+            Start First Subscription
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

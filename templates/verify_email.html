@@ -1,0 +1,292 @@
+{% extends "layout.html" %}
+
+{% block title %}Verify Email - Trade Signals{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>Verify Your Email</h1>
+        <p class="auth-subtitle">Enter your email and complete the steps to verify your address.</p>
+
+        <div id="verifyMessage" class="verify-message" role="alert" aria-live="polite"></div>
+
+        <div class="verify-email-form">
+            <div class="form-group">
+                <label for="verifyEmail">Email Address *</label>
+                <input type="email" id="verifyEmail" name="email" required
+                    placeholder="Enter your email address" autocomplete="email">
+            </div>
+
+            <!-- CAPTCHA: must be solved before Send OTP is enabled -->
+            <div class="form-group captcha-group">
+                <label>Security check</label>
+                <div class="captcha-box">
+                    <span id="captchaQuestion" class="captcha-question"></span>
+                    <input type="text" id="captchaAnswer" name="captcha_answer" inputmode="numeric" pattern="[0-9]*"
+                        placeholder="Answer" maxlength="4" autocomplete="off" aria-label="CAPTCHA answer">
+                    <button type="button" id="captchaRefresh" class="btn-captcha-refresh" title="Get new question">↻</button>
+                </div>
+                <small class="form-help">Solve the math to enable sending the code.</small>
+            </div>
+
+            <div class="form-group">
+                <button type="button" id="btnSendOtp" class="btn btn-primary btn-block" disabled>
+                    Send verification code
+                </button>
+            </div>
+
+            <!-- OTP section: shown after OTP sent -->
+            <div id="otpSection" class="otp-section" hidden>
+                <div class="form-group">
+                    <label for="otpInput">Verification code (6 digits)</label>
+                    <input type="text" id="otpInput" name="otp" inputmode="numeric" pattern="[0-9]*"
+                        placeholder="000000" maxlength="6" autocomplete="one-time-code"
+                        aria-describedby="otpTimer">
+                    <div id="otpTimer" class="otp-timer" aria-live="polite"></div>
+                </div>
+                <div class="form-group otp-actions">
+                    <button type="button" id="btnVerifyOtp" class="btn btn-primary">Verify</button>
+                    <button type="button" id="btnResendOtp" class="btn btn-outline" disabled>
+                        Resend code <span id="resendCountdown"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-footer">
+            <p><a href="{{ url_for('auth.login') }}">Back to login</a></p>
+            <p>New user? <a href="{{ url_for('auth.register') }}">Register</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.verify-message { padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; display: none; }
+.verify-message.success { background: rgba(34,197,94,0.15); color: #16a34a; border: 1px solid #22c55e; display: block; }
+.verify-message.error { background: rgba(239,68,68,0.1); color: #dc2626; border: 1px solid #ef4444; display: block; }
+.captcha-box { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.captcha-question { font-weight: 600; font-size: 1.1rem; min-width: 4ch; }
+.captcha-box input { width: 5rem; text-align: center; }
+.btn-captcha-refresh { background: transparent; border: 1px solid currentColor; border-radius: 6px; padding: 0.4rem 0.6rem; cursor: pointer; font-size: 1.2rem; }
+.btn-captcha-refresh:hover { opacity: 0.8; }
+.otp-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
+.otp-timer { font-size: 0.9rem; margin-top: 0.25rem; }
+.otp-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.otp-actions .btn { flex: 1; min-width: 120px; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const API = {
+        captcha: "{{ url_for('auth.api_captcha') }}",
+        sendOtp: "{{ url_for('auth.api_send_verification_otp') }}",
+        verifyOtp: "{{ url_for('auth.api_verify_email_otp') }}"
+    };
+
+    const OTP_EXPIRY_SEC = 5 * 60;
+    const RESEND_COOLDOWN_SEC = 30;
+
+    const el = (id) => document.getElementById(id);
+    const message = el('verifyMessage');
+    const emailInput = el('verifyEmail');
+    const captchaQuestion = el('captchaQuestion');
+    const captchaAnswer = el('captchaAnswer');
+    const captchaRefresh = el('captchaRefresh');
+    const btnSendOtp = el('btnSendOtp');
+    const otpSection = el('otpSection');
+    const otpInput = el('otpInput');
+    const otpTimer = el('otpTimer');
+    const btnVerifyOtp = el('btnVerifyOtp');
+    const btnResendOtp = el('btnResendOtp');
+    const resendCountdown = el('resendCountdown');
+
+    let state = { captchaId: null, otpExpiresAt: null, resendAt: null, timers: [] };
+
+    function clearTimers() {
+        state.timers.forEach(t => clearInterval(t));
+        state.timers = [];
+    }
+
+    function showMsg(text, type) {
+        message.textContent = text;
+        message.className = 'verify-message ' + (type || '');
+        message.style.display = text ? 'block' : 'none';
+    }
+
+    function captchaSolved() {
+        const email = (emailInput.value || '').trim();
+        const answer = (captchaAnswer.value || '').trim();
+        return state.captchaId && email && answer;
+    }
+
+    function enableSendOtp() {
+        btnSendOtp.disabled = !captchaSolved();
+    }
+
+    function loadCaptcha() {
+        fetch(API.captcha, { method: 'GET', headers: { 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(data => {
+                state.captchaId = data.captcha_id;
+                captchaQuestion.textContent = data.question + ' = ';
+                captchaAnswer.value = '';
+                captchaAnswer.focus();
+                enableSendOtp();
+            })
+            .catch(() => { showMsg('Unable to load security check. Please refresh.', 'error'); });
+    }
+
+    captchaRefresh.addEventListener('click', loadCaptcha);
+    emailInput.addEventListener('input', enableSendOtp);
+    captchaAnswer.addEventListener('input', enableSendOtp);
+
+    function startCountdown(seconds, fnTick, fnEnd) {
+        let left = seconds;
+        fnTick(left);
+        const t = setInterval(() => {
+            left--;
+            fnTick(left);
+            if (left <= 0) { clearInterval(t); fnEnd && fnEnd(); }
+        }, 1000);
+        state.timers.push(t);
+    }
+
+    btnSendOtp.addEventListener('click', function() {
+        const email = (emailInput.value || '').trim();
+        if (!email || !state.captchaId || !captchaAnswer.value) return;
+        btnSendOtp.disabled = true;
+        showMsg('');
+
+        const body = JSON.stringify({
+            email: email,
+            captcha_id: state.captchaId,
+            captcha_answer: captchaAnswer.value.trim()
+        });
+        fetch(API.sendOtp, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: body
+        })
+        .then(r => r.json().then(data => ({ status: r.status, data })))
+        .then(({ status, data }) => {
+            if (data.success) {
+                showMsg(data.message || 'Verification code sent. Check your email.', 'success');
+                otpSection.hidden = false;
+                otpInput.value = '';
+                otpInput.focus();
+                state.otpExpiresAt = Date.now() + OTP_EXPIRY_SEC * 1000;
+                state.resendAt = Date.now() + RESEND_COOLDOWN_SEC * 1000;
+                clearTimers();
+                startCountdown(OTP_EXPIRY_SEC,
+                    (s) => { otpTimer.textContent = 'Code expires in ' + Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); },
+                    () => { otpTimer.textContent = 'Code expired. Request a new one.'; }
+                );
+                startCountdown(RESEND_COOLDOWN_SEC,
+                    (s) => { resendCountdown.textContent = '(' + s + 's)'; btnResendOtp.disabled = true; },
+                    () => { resendCountdown.textContent = ''; btnResendOtp.disabled = false; }
+                );
+                loadCaptcha();
+            } else {
+                showMsg(data.message || 'Could not send code. Try again.', 'error');
+                btnSendOtp.disabled = false;
+                enableSendOtp();
+            }
+        })
+        .catch(() => {
+            showMsg('Request failed. Please try again.', 'error');
+            btnSendOtp.disabled = false;
+            enableSendOtp();
+        });
+    });
+
+    otpInput.addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    });
+
+    btnVerifyOtp.addEventListener('click', function() {
+        const email = (emailInput.value || '').trim();
+        const otp = (otpInput.value || '').trim();
+        if (!email || otp.length !== 6) {
+            showMsg('Please enter the 6-digit code from your email.', 'error');
+            return;
+        }
+        btnVerifyOtp.disabled = true;
+        showMsg('');
+
+        fetch(API.verifyOtp, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ email: email, otp: otp })
+        })
+        .then(r => r.json().then(data => ({ status: r.status, data })))
+        .then(({ data }) => {
+            if (data.success) {
+                showMsg(data.message || 'Email verified successfully.', 'success');
+                otpSection.hidden = true;
+                clearTimers();
+                setTimeout(function() { window.location.href = "{{ url_for('auth.login') }}"; }, 1500);
+            } else {
+                showMsg(data.message || 'Invalid or expired code.', 'error');
+                btnVerifyOtp.disabled = false;
+            }
+        })
+        .catch(() => {
+            showMsg('Request failed. Please try again.', 'error');
+            btnVerifyOtp.disabled = false;
+        });
+    });
+
+    btnResendOtp.addEventListener('click', function() {
+        if (btnResendOtp.disabled) return;
+        const email = (emailInput.value || '').trim();
+        if (!email || !state.captchaId || !captchaAnswer.value) {
+            showMsg('Solve the security check and use Send verification code again.', 'error');
+            return;
+        }
+        btnResendOtp.disabled = true;
+        showMsg('');
+        const body = JSON.stringify({
+            email: email,
+            captcha_id: state.captchaId,
+            captcha_answer: captchaAnswer.value.trim()
+        });
+        fetch(API.sendOtp, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: body
+        })
+        .then(r => r.json().then(data => ({ status: r.status, data })))
+        .then(({ data }) => {
+            if (data.success) {
+                showMsg(data.message || 'New code sent.', 'success');
+                state.otpExpiresAt = Date.now() + OTP_EXPIRY_SEC * 1000;
+                state.resendAt = Date.now() + RESEND_COOLDOWN_SEC * 1000;
+                clearTimers();
+                startCountdown(OTP_EXPIRY_SEC,
+                    (s) => { otpTimer.textContent = 'Code expires in ' + Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); },
+                    () => { otpTimer.textContent = 'Code expired.'; }
+                );
+                startCountdown(RESEND_COOLDOWN_SEC,
+                    (s) => { resendCountdown.textContent = '(' + s + 's)'; btnResendOtp.disabled = true; },
+                    () => { resendCountdown.textContent = ''; btnResendOtp.disabled = false; }
+                );
+                loadCaptcha();
+            } else {
+                showMsg(data.message || 'Could not resend.', 'error');
+                btnResendOtp.disabled = false;
+            }
+        })
+        .catch(() => {
+            showMsg('Request failed. Please try again.', 'error');
+            btnResendOtp.disabled = false;
+        });
+    });
+
+    loadCaptcha();
+})();
+</script>
+{% endblock %}

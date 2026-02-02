@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Trade Signals{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if app_settings and app_settings.announcement_banner %}
+    <div class="announcement-banner" style="background: var(--accent-yellow, #ffc107); color: var(--bg-dark, #1a1a1a); text-align: center; padding: 0.5rem 1rem; font-size: 0.9rem;">
+        {{ app_settings.announcement_banner }}
+    </div>
+    {% endif %}
+    <!-- Header Navigation -->
+    <header class="header">
+        <nav class="navbar navbar-animate">
+            <div class="container">
+                <div class="nav-brand">
+                    <a href="{{ url_for('public.home') }}">
+                        <span class="logo-icon"><i data-lucide="zap" stroke-width="2"></i></span>
+                        <span>{{ app_settings.website_name if app_settings else 'Trade Signals' }}</span>
+                    </a>
+                </div>
+                <button type="button" class="nav-toggle" aria-label="Toggle menu" aria-expanded="false" id="navToggle">
+                    <span class="nav-toggle-bar"></span>
+                    <span class="nav-toggle-bar"></span>
+                    <span class="nav-toggle-bar"></span>
+                </button>
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="{{ url_for('public.home') }}">Home</a></li>
+                    <li>
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('user_products.products') }}">Packages</a>
+                        {% else %}
+                            <a href="{{ url_for('public.home') }}#services">Packages</a>
+                        {% endif %}
+                    </li>
+                    <li>
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('user_signals.signals') }}">Signals</a>
+                        {% else %}
+                            <a href="{{ url_for('public.signals') }}">Signals</a>
+                        {% endif %}
+                    </li>
+                    <li><a href="{{ url_for('public.contact') }}">Contact</a></li>
+                </ul>
+                <div class="nav-actions">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('user_dashboard.dashboard') }}" class="btn btn-primary">Dashboard</a>
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Login →</a>
+                        {% if app_settings and app_settings.allow_registration %}
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Register +</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <div class="footer-divider" aria-hidden="true"></div>
+    <footer class="footer fade-in-on-scroll">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a class="footer-logo" href="{{ url_for('public.home') }}">
+                        <span class="footer-logo-icon"><i data-lucide="zap" stroke-width="2"></i></span>
+                        <span>{{ app_settings.website_name if app_settings else 'Trade Signals' }}</span>
+                    </a>
+                    <p class="footer-tagline">AI-powered market intelligence for confident, compliant trading decisions.</p>
+                    <div class="footer-social" aria-label="Social media links">
+                        <a href="#" class="footer-social-link" aria-label="LinkedIn">
+                            <i data-lucide="linkedin"></i>
+                        </a>
+                        <a href="#" class="footer-social-link" aria-label="Twitter">
+                            <i data-lucide="twitter"></i>
+                        </a>
+                        <a href="#" class="footer-social-link" aria-label="GitHub">
+                            <i data-lucide="github"></i>
+                        </a>
+                        <a href="#" class="footer-social-link" aria-label="YouTube">
+                            <i data-lucide="youtube"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="{{ url_for('public.home') }}#services">Signals Engine</a></li>
+                        <li><a href="{{ url_for('public.home') }}#services">Portfolio Insights</a></li>
+                        <li><a href="{{ url_for('public.home') }}#services">Risk Controls</a></li>
+                        <li><a href="{{ url_for('public.home') }}#services">Pricing</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="{{ url_for('public.home') }}#about">About</a></li>
+                        <li><a href="{{ url_for('public.contact') }}">Contact</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Press</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">FAQs</a></li>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">Security</a></li>
+                        {% if app_settings and app_settings.terms_url %}
+                        <li><a href="{{ app_settings.terms_url }}" target="_blank" rel="noopener">Terms</a></li>
+                        {% else %}
+                        <li><a href="#">Terms</a></li>
+                        {% endif %}
+                        {% if app_settings and app_settings.privacy_policy_url %}
+                        <li><a href="{{ app_settings.privacy_policy_url }}" target="_blank" rel="noopener">Privacy</a></li>
+                        {% else %}
+                        <li><a href="#">Privacy</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="footer-column footer-contact">
+                    <h4>Support</h4>
+                    <ul>
+                        <li>
+                            <span class="footer-contact-item">
+                                <i data-lucide="mail"></i>
+                                <a href="mailto:{{ app_settings.support_email if app_settings else 'support@tradesignal.tech' }}">{{ app_settings.support_email if app_settings else 'support@tradesignal.tech' }}</a>
+                            </span>
+                        </li>
+                        <li>
+                            <span class="footer-contact-item">
+                                <i data-lucide="phone"></i>
+                                <span>{{ app_settings.support_phone if app_settings else '+91 99999 99999' }}</span>
+                            </span>
+                        </li>
+                        <li>
+                            <span class="footer-contact-item">
+                                <i data-lucide="clock"></i>
+                                <span>Mon–Fri · 9 AM to 6 PM</span>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 {{ app_settings.website_name if app_settings else 'Trade Signals' }}. All rights reserved. <span class="footer-made">Made with <span class="footer-heart" aria-hidden="true">❤</span> in India</span></p>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+    <script>
+        (function() {
+            var toggle = document.getElementById('navToggle');
+            var menu = document.getElementById('navMenu');
+            if (toggle && menu) {
+                toggle.addEventListener('click', function() {
+                    var open = toggle.getAttribute('aria-expanded') === 'true';
+                    toggle.setAttribute('aria-expanded', !open);
+                    menu.classList.toggle('nav-menu-open', !open);
+                });
+            }
+
+            // Auto-dismiss flash messages (shorter for success confirmations)
+            document.querySelectorAll('.alert-success').forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.animation = 'toastSlideOut 0.3s ease-in forwards';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 300);
+                }, 1800);
+            });
+
+            document.querySelectorAll('.alert-info').forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.animation = 'toastSlideOut 0.3s ease-in forwards';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 300);
+                }, 3000);
+            });
+        })();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

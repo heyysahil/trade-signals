@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+
+{% block title %}Confirm Subscription - Trade Signals{% endblock %}
+
+{% block content %}
+<div class="subscription-confirm-page">
+    <div class="container">
+        <div class="confirm-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Confirm Your Subscription</h1>
+                <p class="page-subtitle">Review your subscription details before proceeding to payment</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('user_subscriptions.subscription_confirm') }}" id="confirmForm">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                <input type="hidden" name="plan_type" value="{{ plan_type }}">
+                
+                <div class="details-grid">
+                    <!-- User Details Section -->
+                    <div class="details-section">
+                        <h2 class="section-title">Account Information</h2>
+                        <div class="details-card">
+                            <div class="detail-item">
+                                <span class="detail-label">Name</span>
+                                <span class="detail-value">{{ user.full_name }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Email</span>
+                                <span class="detail-value">{{ user.email }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Phone</span>
+                                <span class="detail-value">{{ user.mobile }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">User ID</span>
+                                <span class="detail-value">#{{ user.id }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subscription Details Section -->
+                    <div class="details-section">
+                        <h2 class="section-title">Subscription Summary</h2>
+                        <div class="details-card">
+                            <div class="detail-item">
+                                <span class="detail-label">Product</span>
+                                <span class="detail-value">{{ product.name }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Plan</span>
+                                <span class="detail-value">{{ plan_name }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Duration</span>
+                                <span class="detail-value">{{ duration_days }} days</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Start Date</span>
+                                <span class="detail-value">{{ start_date.strftime('%d %b, %Y') }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">End Date</span>
+                                <span class="detail-value">{{ end_date.strftime('%d %b, %Y') }}</span>
+                            </div>
+                            <div class="detail-item highlight">
+                                <span class="detail-label">Total Amount</span>
+                                <span class="detail-value amount">₹{{ "%.0f"|format(price) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Confirmation Section -->
+                <div class="confirmation-section">
+                    <div class="terms-checkbox">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="agree_terms" required>
+                            <span>I agree to the <a href="#" target="_blank">Terms of Service</a> and <a href="#" target="_blank">Privacy Policy</a></span>
+                        </label>
+                    </div>
+
+                    <div class="payment-notice">
+                        <p><i data-lucide="shield-check" style="width: 16px; height: 16px;"></i> Secure checkout — You'll be redirected to complete payment</p>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{{ url_for('user_products.product_detail', product_id=product.id) }}" class="btn btn-secondary">← Back to Package</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="lock" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                            Confirm & Proceed
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

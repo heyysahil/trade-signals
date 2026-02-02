@@ -1,0 +1,118 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - Trade Signals{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="container">
+        <!-- User Greeting Header -->
+        <section class="dashboard-greeting">
+            <div class="greeting-content">
+                <div class="greeting-text">
+                    <h1>Welcome back, {{ user.full_name.split()[0] if user.full_name else 'User' }} 👋</h1>
+                    <p class="greeting-subtitle">{{ user.email }}</p>
+                </div>
+                <div class="greeting-actions">
+                    <a href="{{ url_for('user_products.products') }}" class="dashboard-action-btn">
+                        <i data-lucide="shopping-bag"></i>
+                        <span>Browse Packages</span>
+                    </a>
+                    <a href="{{ url_for('user_signals.signals') }}" class="dashboard-action-btn">
+                        <i data-lucide="activity"></i>
+                        <span>View Signals</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- My Subscriptions Section -->
+        <section class="subscriptions-section">
+            <div class="section-header">
+                <h2>My Subscriptions</h2>
+            </div>
+
+            {% if subscriptions %}
+            <div class="subscriptions-table-container">
+                <table class="subscriptions-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Plan</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Status</th>
+                            <th>Payment Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in subscriptions %}
+                        <tr>
+                            <td>{{ item.product_name }}</td>
+                            <td>
+                                {% if item.product %}
+                                    {% if item.product.price == 0 %}
+                                        Trial Plan
+                                    {% else %}
+                                        Monthly Plan
+                                    {% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>{{ item.subscription.start_date.strftime('%d-%m-%Y') if item.subscription.start_date else 'N/A' }}</td>
+                            <td>{{ item.subscription.end_date.strftime('%d-%m-%Y') if item.subscription.end_date else 'N/A' }}</td>
+                            <td>
+                                {% if item.subscription.status == 'approved' %}
+                                    <span class="badge badge-success">Active</span>
+                                {% elif item.subscription.status == 'pending' %}
+                                    <span class="badge badge-warning">Awaiting Admin Approval</span>
+                                {% elif item.subscription.status == 'rejected' %}
+                                    <span class="badge badge-danger">Rejected</span>
+                                    {% if item.subscription.rejection_reason %}
+                                        <br><small style="color: var(--danger-color); margin-top: 0.25rem; display: block;">{{ item.subscription.rejection_reason }}</small>
+                                    {% endif %}
+                                {% elif item.subscription.status == 'expired' %}
+                                    <span class="badge badge-warning">Expired</span>
+                                {% elif item.subscription.status == 'cancelled' %}
+                                    <span class="badge badge-danger">Cancelled</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">{{ item.subscription.status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.payment_status == 'completed' %}
+                                    <span class="badge badge-success">Completed</span>
+                                {% elif item.payment_status == 'pending' %}
+                                    <span class="badge badge-warning">Pending</span>
+                                {% elif item.payment_status == 'failed' %}
+                                    <span class="badge badge-danger">Failed</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">{{ item.payment_status|default('Pending')|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    {% if item.subscription.status == 'expired' or item.subscription.status == 'cancelled' %}
+                                        <a href="{{ url_for('user_products.products') }}" class="btn btn-sm btn-primary">Renew</a>
+                                    {% endif %}
+                                    <a href="{{ url_for('user_subscriptions.view_subscription', subscription_id=item.subscription.id) }}" class="btn btn-sm btn-outline">Details</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>You don't have any subscriptions yet.</p>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+{% block extra_js %}
+{% endblock %}
+{% endblock %}

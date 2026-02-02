@@ -1,0 +1,117 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}{% if subscription %}Edit Subscription{% else %}Start Subscription{% endif %} - Admin{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header fade-in-on-scroll">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>{% if subscription %}Edit Subscription{% else %}Start Subscription{% endif %}</h1>
+            <p class="admin-page-subtitle">{% if subscription %}Update subscription details{% else %}Manually create a subscription for a customer{% endif %}</p>
+        </div>
+        <a href="{{ url_for('admin_subscriptions.subscriptions') }}" class="admin-btn admin-btn-secondary">
+            ← Back to Subscriptions
+        </a>
+    </div>
+</div>
+
+<!-- Subscription Form -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.2s;">
+    <form method="POST" action="{% if subscription %}{{ url_for('admin_subscriptions.edit_subscription', subscription_id=subscription.id) }}{% else %}{{ url_for('admin_subscriptions.start_subscription') }}{% endif %}">
+        <div style="display: grid; gap: 1.5rem;">
+            {% if not subscription %}
+            <div class="form-group">
+                <label for="user_id">Customer *</label>
+                <select id="user_id" name="user_id" required>
+                    <option value="">Select Customer</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" {% if form and form.user_id == user.id|string %}selected{% endif %}>
+                        {{ user.full_name }} ({{ user.email }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="product_id">Product *</label>
+                <select id="product_id" name="product_id" required>
+                    <option value="">Select Product</option>
+                    {% for product in products %}
+                    <option value="{{ product.id }}" {% if form and form.product_id == product.id|string %}selected{% endif %}>
+                        {{ product.name }} - Rs {{ "%.2f"|format(product.price) }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="duration_days">Duration (Days) *</label>
+                <input 
+                    type="number" 
+                    id="duration_days" 
+                    name="duration_days" 
+                    required
+                    min="1"
+                    value="{{ form.duration_days if form else '30' }}"
+                    placeholder="Enter duration in days"
+                >
+            </div>
+            {% else %}
+            <div class="form-group">
+                <label>Customer</label>
+                <input type="text" value="{{ subscription.user.full_name if subscription.user else 'N/A' }}" disabled>
+            </div>
+            <div class="form-group">
+                <label>Product</label>
+                <input type="text" value="{{ subscription.product.name if subscription.product else 'N/A' }}" disabled>
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="start_date">Start Date *</label>
+                <input 
+                    type="date" 
+                    id="start_date" 
+                    name="start_date" 
+                    required
+                    value="{% if subscription %}{{ subscription.start_date.strftime('%Y-%m-%d') if subscription.start_date else '' }}{% elif form %}{{ form.start_date }}{% endif %}"
+                >
+            </div>
+
+            {% if subscription %}
+            <div class="form-group">
+                <label for="end_date">End Date *</label>
+                <input 
+                    type="date" 
+                    id="end_date" 
+                    name="end_date" 
+                    required
+                    value="{{ subscription.end_date.strftime('%Y-%m-%d') if subscription.end_date else '' }}"
+                >
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="status">Status *</label>
+                <select id="status" name="status" required>
+                    <option value="active" {% if subscription and subscription.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="pending" {% if subscription and subscription.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="expired" {% if subscription and subscription.status == 'expired' %}selected{% endif %}>Expired</option>
+                    <option value="cancelled" {% if subscription and subscription.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="submit" class="admin-btn admin-btn-primary">
+                    <span>💾</span>
+                    {% if subscription %}Update Subscription{% else %}Start Subscription{% endif %}
+                </button>
+                <a href="{{ url_for('admin_subscriptions.subscriptions') }}" class="admin-btn admin-btn-secondary">
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

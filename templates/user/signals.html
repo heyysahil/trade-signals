@@ -1,0 +1,225 @@
+{% extends "layout.html" %}
+
+{% block title %}My Signals - Trade Signals{% endblock %}
+
+{% block content %}
+<div class="signals-page">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header fade-in-on-scroll">
+            <h1>Trading Signals Dashboard</h1>
+            <p class="page-subtitle">Monitor your trading performance with real-time signal tracking and comprehensive analytics</p>
+        </div>
+
+        <!-- KPI Stats Bar -->
+        <div class="kpi-stats-bar fade-in-on-scroll">
+            <div class="kpi-item">
+                <i data-lucide="bar-chart-3" class="kpi-icon"></i>
+                <div class="kpi-content">
+                    <div class="kpi-value">{{ total_signals }}</div>
+                    <div class="kpi-label">Total Signals</div>
+                </div>
+            </div>
+            <div class="kpi-item">
+                <i data-lucide="zap" class="kpi-icon"></i>
+                <div class="kpi-content">
+                    <div class="kpi-value">{{ active_count }}</div>
+                    <div class="kpi-label">Active</div>
+                </div>
+            </div>
+            <div class="kpi-item">
+                <i data-lucide="clock" class="kpi-icon"></i>
+                <div class="kpi-content">
+                    <div class="kpi-value">{{ pending_count }}</div>
+                    <div class="kpi-label">Pending</div>
+                </div>
+            </div>
+            <div class="kpi-item kpi-accent">
+                <i data-lucide="target" class="kpi-icon"></i>
+                <div class="kpi-content">
+                    <div class="kpi-value">{{ win_rate }}%</div>
+                    <div class="kpi-label">Win Rate</div>
+                </div>
+            </div>
+            <div class="kpi-item kpi-profit">
+                <i data-lucide="trending-up" class="kpi-icon"></i>
+                <div class="kpi-content">
+                    <div class="kpi-value">₹{{ "%.0f"|format(total_profit) }}</div>
+                    <div class="kpi-label">Total Profit</div>
+                </div>
+            </div>
+            <div class="kpi-item kpi-loss">
+                <i data-lucide="trending-down" class="kpi-icon"></i>
+                <div class="kpi-content">
+                    <div class="kpi-value">₹{{ "%.0f"|format(total_loss) }}</div>
+                    <div class="kpi-label">Total Loss</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        {% if products|length > 1 %}
+        <div class="filter-section fade-in-on-scroll">
+            <div class="signals-filter-bar">
+                <div class="signals-filter-label">
+                    <span class="filter-icon"><i data-lucide="filter"></i></span>
+                    <span>Packages</span>
+                </div>
+                <div class="signals-filter-chips" id="signalsPackageFilter">
+                    <button type="button" class="filter-chip active" data-product-id="all">
+                        <span class="chip-label">All</span>
+                        <span class="chip-count" data-product-id="all"></span>
+                    </button>
+                    {% for product in products %}
+                    <button type="button" class="filter-chip" data-product-id="{{ product.id }}">
+                        <span class="chip-label">{{ product.name }}</span>
+                        <span class="chip-count" data-product-id="{{ product.id }}"></span>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Signals Table -->
+        <div class="signals-table-section fade-in-on-scroll">
+            <h2 class="section-title">
+                <span class="section-icon"><i data-lucide="activity"></i></span>
+                Trading Signals
+            </h2>
+            
+            {% if signals %}
+            <div class="table-container">
+                <table class="signals-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Type</th>
+                            <th>Entry</th>
+                            <th>Entry Time</th>
+                            <th>Exit</th>
+                            <th>Exit Time</th>
+                            <th>Duration</th>
+                            <th>P&L</th>
+                            <th>Status</th>
+                            <th>Product</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for signal in signals %}
+                        <tr data-product-id="{{ signal.product.id if signal.product else 'none' }}">
+                            <td><strong>{{ signal.symbol }}</strong></td>
+                            <td>
+                                <span class="signal-type signal-type-{{ signal.signal_type|lower }}">
+                                    {{ signal.signal_type }}
+                                </span>
+                            </td>
+                            <td>{{ "%.2f"|format(signal.entry_price) }}</td>
+                            <td>{{ signal.entry_time.strftime('%d-%m-%Y %H:%M') if signal.entry_time else 'N/A' }}</td>
+                            <td>{{ "%.2f"|format(signal.exit_price) if signal.exit_price else '-' }}</td>
+                            <td>{{ signal.exit_time.strftime('%d-%m-%Y %H:%M') if signal.exit_time else '-' }}</td>
+                            <td>{{ signal.calculate_duration() }}</td>
+                            <td class="{% if signal.profit_loss and signal.profit_loss > 0 %}profit-value{% elif signal.profit_loss and signal.profit_loss < 0 %}loss-value{% endif %}">
+                                {% if signal.profit_loss %}
+                                    {% if signal.profit_loss > 0 %}+{% endif %}{{ "%.2f"|format(signal.profit_loss) }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if signal.status == 'PROFIT' %}
+                                    <span class="badge badge-success">PROFIT</span>
+                                {% elif signal.status == 'LOSS' %}
+                                    <span class="badge badge-danger">LOSS</span>
+                                {% elif signal.status == 'ACTIVE' %}
+                                    <span class="badge badge-warning">ACTIVE</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">{{ signal.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if signal.product %}
+                                    <span>{{ signal.product.name }}</span>
+                                {% else %}
+                                    <span>N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No signals available. Subscribe to a product to start receiving trading signals.</p>
+                <a href="{{ url_for('user_products.products') }}" class="btn btn-primary">Browse Packages</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chipsContainer = document.getElementById('signalsPackageFilter');
+        const chips = chipsContainer ? chipsContainer.querySelectorAll('.filter-chip') : [];
+        const rows = document.querySelectorAll('.signals-table tbody tr');
+        const initialProductId = "{{ filter_product_id or '' }}";
+
+        // Build counts per product
+        const counts = { all: rows.length };
+        rows.forEach(row => {
+            const pid = row.getAttribute('data-product-id') || 'none';
+            counts[pid] = (counts[pid] || 0) + 1;
+        });
+
+        // Update chip counts
+        document.querySelectorAll('.chip-count').forEach(span => {
+            const pid = span.getAttribute('data-product-id');
+            const count = counts[pid] || 0;
+            span.textContent = count > 0 ? count : '';
+        });
+
+        function applyFilter(productId) {
+            const targetId = (!productId || productId === 'all') ? 'all' : String(productId);
+
+            rows.forEach(row => {
+                const pid = row.getAttribute('data-product-id') || 'none';
+                if (targetId === 'all' || pid === targetId) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Setup chip click handlers
+        chips.forEach(chip => {
+            chip.addEventListener('click', function() {
+                const selectedId = this.getAttribute('data-product-id');
+
+                chips.forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+
+                applyFilter(selectedId === 'all' ? 'all' : selectedId);
+            });
+        });
+
+        // Apply initial filter based on backend filter_product_id (if present)
+        if (initialProductId && chipsContainer) {
+            const initialChip = chipsContainer.querySelector(`.filter-chip[data-product-id="{{ filter_product_id }}"]`);
+            if (initialChip) {
+                chips.forEach(c => c.classList.remove('active'));
+                initialChip.classList.add('active');
+                applyFilter(initialProductId);
+            } else {
+                applyFilter('all');
+            }
+        } else {
+            applyFilter('all');
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

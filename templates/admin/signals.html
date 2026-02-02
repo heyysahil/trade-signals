@@ -1,0 +1,274 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Signal Management - Admin{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header fade-in-on-scroll">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>Signal Management Dashboard</h1>
+            <p class="admin-page-subtitle">Key metrics and products overview</p>
+        </div>
+        <a href="{{ url_for('admin_signals.create_signal') }}" class="admin-btn admin-btn-primary">
+            <span>➕</span> Add Signal
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="admin-summary-cards">
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.1s;">
+        <div class="admin-summary-label">Total Signals</div>
+        <div class="admin-summary-value">{{ total_signals }}</div>
+    </div>
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.2s;">
+        <div class="admin-summary-label">Package Subscribers</div>
+        <div class="admin-summary-value">{{ subscribers_count }}</div>
+    </div>
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.3s;">
+        <div class="admin-summary-label">Pending Signals</div>
+        <div class="admin-summary-value" style="color: var(--warning);">{{ pending_signals_count }}</div>
+    </div>
+</div>
+
+<!-- Filter by Product - Superadmin Only -->
+{% if session.get('admin_role') == 'superadmin' %}
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.4s;">
+    <div class="admin-table-header">
+        <h2>Filter by Package</h2>
+    </div>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+        <a href="{{ url_for('admin_signals.signals') }}" 
+           class="admin-btn {% if not filter_product_id %}admin-btn-primary{% else %}admin-btn-secondary{% endif %} admin-btn-sm">
+            All
+        </a>
+        {% for product in products %}
+        <a href="{{ url_for('admin_signals.signals', product_id=product.id) }}" 
+           class="admin-btn {% if filter_product_id == product.id %}admin-btn-primary{% else %}admin-btn-secondary{% endif %} admin-btn-sm">
+            {{ product.name }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Signals Table -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.5s;">
+    <div class="admin-table-header">
+        {% if product_category_name %}
+        <h2>{{ product_category_name }} - Signals Table</h2>
+        {% else %}
+        <h2>Signals Table</h2>
+        {% endif %}
+    </div>
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Product</th>
+                    <th>Exchange</th>
+                    <th>Stock</th>
+                    <th>Type</th>
+                    <th>Entry</th>
+                    <th>Live Price</th>
+                    <th>Exit Price</th>
+                    <th>P&L</th>
+                    <th>Target</th>
+                    <th>Stop</th>
+                    <th>Entry Time</th>
+                    <th>Exit Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if signals %}
+                    {% for signal in signals %}
+                    <tr>
+                        <td>{{ signal.id }}</td>
+                        <td>{{ signal.product.name if signal.product else 'N/A' }}</td>
+                        <td>{{ signal.exchange or 'N/A' }}</td>
+                        <td><strong>{{ signal.symbol }}</strong></td>
+                        <td>
+                            <span class="admin-badge {% if signal.signal_type == 'BUY' %}admin-badge-success{% else %}admin-badge-danger{% endif %}">
+                                {{ signal.signal_type }}
+                            </span>
+                        </td>
+                        <td>{{ "%.2f"|format(signal.entry_price) }}</td>
+                        <td>{{ "%.2f"|format(signal.live_price) if signal.live_price else '-' }}</td>
+                        <td>{{ "%.2f"|format(signal.exit_price) if signal.exit_price else '-' }}</td>
+                        <td class="{% if signal.profit_loss and signal.profit_loss > 0 %}profit-value{% elif signal.profit_loss and signal.profit_loss < 0 %}loss-value{% endif %}">
+                            {% if signal.profit_loss %}
+                                {% if signal.profit_loss > 0 %}+{% endif %}Rs {{ "%.2f"|format(signal.profit_loss) }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ "%.2f"|format(signal.target_price) if signal.target_price else '-' }}</td>
+                        <td>{{ "%.2f"|format(signal.stop_loss) if signal.stop_loss else '-' }}</td>
+                        <td>{{ signal.entry_time.strftime('%d-%m-%Y %H:%M') if signal.entry_time else 'N/A' }}</td>
+                        <td>{{ signal.exit_time.strftime('%d-%m-%Y %H:%M') if signal.exit_time else '-' }}</td>
+                        <td>
+                            {% if signal.status == 'PROFIT' %}
+                                <span class="admin-badge admin-badge-success">PROFIT</span>
+                            {% elif signal.status == 'LOSS' %}
+                                <span class="admin-badge admin-badge-danger">LOSS</span>
+                            {% elif signal.status == 'ACTIVE' %}
+                                <span class="admin-badge admin-badge-warning">ACTIVE</span>
+                            {% else %}
+                                <span class="admin-badge admin-badge-secondary">{{ signal.status }}</span>
+                            {% endif %}
+                            <br>
+                            <small style="margin-top: 0.25rem; display: block;">
+                                {% if signal.approval_status == 'APPROVED' %}
+                                    <span class="admin-badge admin-badge-success" style="font-size: 0.75rem;">✓ Approved</span>
+                                {% elif signal.approval_status == 'REJECTED' %}
+                                    <span class="admin-badge admin-badge-danger" style="font-size: 0.75rem;">✗ Rejected</span>
+                                {% elif signal.approval_status == 'PENDING' %}
+                                    <span class="admin-badge admin-badge-warning" style="font-size: 0.75rem;">⏳ Pending</span>
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                {% if signal.approval_status == 'PENDING' %}
+                                <form method="POST" action="{{ url_for('admin_signals.approve_signal', signal_id=signal.id) }}" 
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Approve signal for {{ signal.symbol }}?');">
+                                    <button type="submit" class="admin-btn admin-btn-success admin-btn-sm">
+                                        ✓ Approve
+                                    </button>
+                                </form>
+                                <button type="button" 
+                                        class="admin-btn admin-btn-danger admin-btn-sm"
+                                        onclick="openRejectSignalModal({{ signal.id }}, '{{ signal.symbol }}')">
+                                    ✗ Reject
+                                </button>
+                                {% elif signal.approval_status == 'REJECTED' %}
+                                <form method="POST" action="{{ url_for('admin_signals.approve_signal', signal_id=signal.id) }}" 
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Approve this previously rejected signal?');">
+                                    <button type="submit" class="admin-btn admin-btn-success admin-btn-sm">
+                                        ✓ Approve
+                                    </button>
+                                </form>
+                                {% endif %}
+                                {% if session.get('admin_role') == 'superadmin' %}
+                                <a href="{{ url_for('admin_signals.edit_signal', signal_id=signal.id) }}" 
+                                   class="admin-btn admin-btn-secondary admin-btn-sm">
+                                    Edit
+                                </a>
+                                {% endif %}
+                                {% if signal.status == 'ACTIVE' %}
+                                <button type="button" 
+                                        class="admin-btn admin-btn-primary admin-btn-sm"
+                                        onclick="openCloseModal({{ signal.id }}, '{{ signal.symbol }}')">
+                                    Close Trade
+                                </button>
+                                {% endif %}
+                                <form method="POST" action="{{ url_for('admin_signals.delete_signal', signal_id=signal.id) }}" 
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Are you sure you want to delete signal for {{ signal.symbol }}?');">
+                                    <button type="submit" class="admin-btn admin-btn-danger admin-btn-sm">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="15" class="admin-empty-state">
+                            <p>No signals found.</p>
+                            <a href="{{ url_for('admin_signals.create_signal') }}" class="admin-btn admin-btn-primary">
+                                Create First Signal
+                            </a>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Close Trade Modal -->
+<div id="closeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card); padding: 2rem; border-radius: 1rem; max-width: 400px; width: 90%; border: 1px solid var(--border-color);">
+        <h3 style="margin-bottom: 1rem; color: var(--text-white);">Close Trade</h3>
+        <form method="POST" id="closeForm">
+            <div class="form-group">
+                <label for="exit_price">Exit Price *</label>
+                <input type="number" id="exit_price" name="exit_price" step="0.01" required placeholder="Enter exit price">
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="admin-btn admin-btn-primary">Close Trade</button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="closeCloseModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.profit-value {
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+.loss-value {
+    color: var(--danger-color);
+    font-weight: 600;
+}
+</style>
+
+<script>
+function openCloseModal(signalId, symbol) {
+    document.getElementById('closeForm').action = '/admin/signals/' + signalId + '/close';
+    document.getElementById('closeModal').style.display = 'flex';
+}
+
+function closeCloseModal() {
+    document.getElementById('closeModal').style.display = 'none';
+}
+
+// Close modal on outside click
+document.getElementById('closeModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeCloseModal();
+    }
+});
+
+function openRejectSignalModal(signalId, symbol) {
+    document.getElementById('rejectSignalForm').action = '/admin/signals/' + signalId + '/reject';
+    document.getElementById('rejectSignalModal').style.display = 'flex';
+}
+
+function closeRejectSignalModal() {
+    document.getElementById('rejectSignalModal').style.display = 'none';
+}
+
+// Close reject modal on outside click
+document.getElementById('rejectSignalModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRejectSignalModal();
+    }
+});
+</script>
+
+<!-- Reject Signal Modal -->
+<div id="rejectSignalModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card); padding: 2rem; border-radius: 1rem; max-width: 500px; width: 90%; border: 1px solid var(--border-color);">
+        <h3 style="margin-bottom: 1rem; color: var(--text-white);">Reject Signal</h3>
+        <form method="POST" id="rejectSignalForm">
+            <div class="form-group">
+                <label>Are you sure you want to reject this signal?</label>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="admin-btn admin-btn-danger">Reject Signal</button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="closeRejectSignalModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

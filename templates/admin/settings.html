@@ -1,0 +1,259 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Settings - Admin{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header fade-in-on-scroll">
+    <h1>Settings</h1>
+    <p class="admin-page-subtitle">Configure brand, payment, support, and integrations</p>
+</div>
+
+<form method="POST" action="{{ url_for('admin_settings.settings') }}">
+    <!-- Brand Settings -->
+    <div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.1s;">
+        <div class="admin-table-header">
+            <h2>Brand</h2>
+        </div>
+        <div style="display: grid; gap: 1rem; padding: 1rem 0;">
+            <div class="form-group">
+                <label for="website_name">Website Name</label>
+                <input type="text" id="website_name" name="website_name" value="{{ settings.website_name }}" placeholder="e.g., Trade Signals">
+            </div>
+            <div class="form-group">
+                <label for="website_url">Website URL</label>
+                <input type="url" id="website_url" name="website_url" value="{{ settings.website_url }}" placeholder="https://example.com">
+            </div>
+            <div class="form-group">
+                <label for="analyst_name">Analyst Name</label>
+                <input type="text" id="analyst_name" name="analyst_name" value="{{ settings.analyst_name }}" placeholder="e.g., SimpleIncome Team">
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Settings -->
+    <div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.15s;">
+        <div class="admin-table-header">
+            <h2>Payment (UPI)</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem 0;">
+            <div class="form-group">
+                <label for="upi_name">UPI Name</label>
+                <input type="text" id="upi_name" name="upi_name" value="{{ settings.upi_name }}" placeholder="Display name for UPI">
+            </div>
+            <div class="form-group">
+                <label for="upi_handle">UPI Handle</label>
+                <input type="text" id="upi_handle" name="upi_handle" value="{{ settings.upi_handle }}" placeholder="e.g., yourname@upi">
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Settings -->
+    <div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.2s;">
+        <div class="admin-table-header">
+            <h2>Support</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem 0;">
+            <div class="form-group">
+                <label for="support_email">Support Email</label>
+                <input type="email" id="support_email" name="support_email" value="{{ settings.support_email }}" placeholder="support@example.com">
+            </div>
+            <div class="form-group">
+                <label for="support_phone">Support Phone</label>
+                <input type="text" id="support_phone" name="support_phone" value="{{ settings.support_phone }}" placeholder="+91 99999 99999">
+            </div>
+        </div>
+    </div>
+
+    <!-- Integrations -->
+    <div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.25s;">
+        <div class="admin-table-header">
+            <h2>Integrations</h2>
+        </div>
+        <div style="display: grid; gap: 1rem; padding: 1rem 0;">
+            <div class="form-group">
+                <label for="telegram_api_url">Telegram API URL</label>
+                <input type="url" id="telegram_api_url" name="telegram_api_url" value="{{ settings.telegram_api_url }}" placeholder="https://api.telegram.org/...">
+            </div>
+            <div class="form-group">
+                <label for="whatsapp_api_url">WhatsApp API URL</label>
+                <input type="url" id="whatsapp_api_url" name="whatsapp_api_url" value="{{ settings.whatsapp_api_url }}" placeholder="https://api.whatsapp.com/...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Policies -->
+    <div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.3s;">
+        <div class="admin-table-header">
+            <h2>Policies</h2>
+        </div>
+        <div style="display: grid; gap: 1rem; padding: 1rem 0;">
+            <div class="form-group">
+                <label for="privacy_policy_url">Privacy Policy URL</label>
+                <input type="url" id="privacy_policy_url" name="privacy_policy_url" value="{{ settings.privacy_policy_url }}" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label for="terms_url">Terms of Service URL</label>
+                <input type="url" id="terms_url" name="terms_url" value="{{ settings.terms_url }}" placeholder="https://...">
+            </div>
+        </div>
+    </div>
+
+    <!-- User-Side Controls -->
+    <div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.32s;">
+        <div class="admin-table-header">
+            <h2>User-Side Controls</h2>
+        </div>
+        <p style="color: var(--text-gray); margin-bottom: 1rem; font-size: 0.9rem;">Control what users can see and do on the public site.</p>
+        <div style="display: grid; gap: 1rem; padding: 1rem 0;">
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" name="allow_registration" {% if settings.allow_registration %}checked{% endif %} style="width: auto;">
+                    <span>Allow new user registration (disable to close signups)</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" name="contact_form_enabled" {% if settings.contact_form_enabled %}checked{% endif %} style="width: auto;">
+                    <span>Contact form enabled (show contact page form)</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" name="show_pricing_on_home" {% if settings.show_pricing_on_home %}checked{% endif %} style="width: auto;">
+                    <span>Show pricing / packages section on homepage</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="announcement_banner">Announcement banner (shown at top of user site)</label>
+                <input type="text" id="announcement_banner" name="announcement_banner" value="{{ settings.announcement_banner }}" placeholder="Leave blank to hide. e.g., New features live!">
+                <small style="color: var(--text-gray); display: block; margin-top: 0.5rem;">Optional message for all users. Empty = no banner.</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintenance Mode -->
+    <div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.35s;">
+        <div class="admin-table-header">
+            <h2>Maintenance</h2>
+        </div>
+        <div style="padding: 1rem 0;">
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" name="maintenance_mode" {% if settings.maintenance_mode %}checked{% endif %} style="width: auto;">
+                    <span>Enable maintenance mode (site unavailable to users; admin panel remains accessible)</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="fade-in-on-scroll" style="animation-delay: 0.4s; margin-top: 1.5rem; display: flex; gap: 1rem;">
+        <button type="submit" class="admin-btn admin-btn-primary">
+            <span>💾</span> Save Changes
+        </button>
+        <button type="reset" class="admin-btn admin-btn-secondary">
+            <span>↺</span> Reset
+        </button>
+    </div>
+</form>
+
+<style>
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="url"] {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
+}
+
+.form-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--accent-yellow);
+}
+
+.admin-btn {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.admin-btn-primary {
+    background: var(--accent-yellow);
+    color: var(--bg-dark);
+}
+
+.admin-btn-primary:hover {
+    background: #e6b800;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.admin-btn-secondary {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+.admin-btn-secondary:hover {
+    background: #444;
+    transform: translateY(-2px);
+}
+
+.admin-table-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.admin-table-header h2 {
+    font-size: 1.3rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-table-section {
+        padding: 1rem;
+    }
+    
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}

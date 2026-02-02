@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Trade Signals</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-theme.css') }}">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="admin-login-page">
+    <div class="admin-login-container">
+        <div class="admin-login-card fade-in-on-scroll">
+            <div class="admin-login-header">
+                <div class="admin-logo">
+                    <span class="admin-icon"><i data-lucide="shield-check"></i></span>
+                    <h1>Admin Login</h1>
+                </div>
+                <p class="admin-subtitle">Admin Panel</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('admin_auth.login') }}" class="admin-login-form" id="adminLoginForm">
+                <div class="form-group">
+                    <label for="email">
+                        <span class="label-icon"><i data-lucide="mail"></i></span>
+                        Email or Username *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="email" 
+                        name="email" 
+                        required
+                        placeholder="Enter your email or username"
+                        value="{{ request.form.email if request.form }}"
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">
+                        <span class="label-icon"><i data-lucide="lock"></i></span>
+                        Password *
+                    </label>
+                    <div style="position: relative;">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            required
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                        >
+                        <button type="button" class="password-toggle" onclick="togglePassword('password')" aria-label="Toggle password visibility" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-gray);">
+                            <i data-lucide="eye" id="password-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Login
+                </button>
+            </form>
+
+            <div class="admin-login-footer">
+                <p>Admin Panel © 2026 | Trade Signals</p>
+            </div>
+        </div>
+    </div>
+    <script>
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
+        
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(fieldId + '-eye');
+            if (field.type === 'password') {
+                field.type = 'text';
+                if (icon) icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                field.type = 'password';
+                if (icon) icon.setAttribute('data-lucide', 'eye');
+            }
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            }
+        }
+    </script>
+</body>
+</html>

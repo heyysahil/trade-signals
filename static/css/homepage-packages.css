@@ -1,0 +1,40 @@
+/* Homepage Packages - 4 Column Layout */
+/* Desktop: 4 columns horizontal row */
+/* Mobile: Responsive stacking */
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+/* Tablet: 2 columns */
+@media (max-width: 1024px) {
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Mobile: 1 column (stacked) */
+@media (max-width: 640px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* Ensure cards are equal height */
+.service-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.service-card .service-description {
+    flex-grow: 1;
+}
+
+.service-card .service-btn {
+    margin-top: auto;
+}

@@ -1,0 +1,136 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Customers - Admin{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header fade-in-on-scroll">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>Customers
+                {% if status_filter == 'active' %}
+                <span class="admin-badge admin-badge-success" style="font-size: 0.875rem; margin-left: 0.5rem;">Active Only</span>
+                {% elif status_filter == 'inactive' %}
+                <span class="admin-badge admin-badge-warning" style="font-size: 0.875rem; margin-left: 0.5rem;">Inactive Only</span>
+                {% endif %}
+            </h1>
+            <p class="admin-page-subtitle">
+                {% if status_filter == 'active' %}
+                    Customers with active subscriptions
+                {% elif status_filter == 'inactive' %}
+                    Customers without active subscriptions
+                {% else %}
+                    Manage customer accounts and profiles
+                {% endif %}
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            {% if status_filter %}
+            <a href="{{ url_for('admin_customers.customers') }}" class="admin-btn admin-btn-secondary">
+                Show All
+            </a>
+            {% endif %}
+            <a href="{{ url_for('admin_customers.create_customer') }}" class="admin-btn admin-btn-primary">
+                <span>➕</span> Add Customer
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Buttons -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.1s;">
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="{{ url_for('admin_customers.customers') }}" 
+           class="admin-btn {% if not status_filter %}admin-btn-primary{% else %}admin-btn-secondary{% endif %} admin-btn-sm">
+            All Customers
+        </a>
+        <a href="{{ url_for('admin_customers.customers', status='active') }}" 
+           class="admin-btn {% if status_filter == 'active' %}admin-btn-primary{% else %}admin-btn-secondary{% endif %} admin-btn-sm">
+            ✓ Active ({{ active_customer_ids|length }})
+        </a>
+        <a href="{{ url_for('admin_customers.customers', status='inactive') }}" 
+           class="admin-btn {% if status_filter == 'inactive' %}admin-btn-primary{% else %}admin-btn-secondary{% endif %} admin-btn-sm">
+            ⊗ Inactive
+        </a>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.2s;">
+    <div class="table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Sr. No</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Date of Joining</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if customers %}
+                    {% for customer in customers %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <a href="{{ url_for('admin_customers.view_customer', customer_id=customer.id) }}" 
+                               style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                                {{ customer.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ customer.mobile }}</td>
+                        <td>{{ customer.email }}</td>
+                        <td>{{ customer.created_at.strftime('%d-%m-%Y') if customer.created_at else 'N/A' }}</td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                {% if customer.is_active %}
+                                    <span class="admin-badge admin-badge-success">Account Active</span>
+                                {% else %}
+                                    <span class="admin-badge admin-badge-danger">Account Inactive</span>
+                                {% endif %}
+                                {% if customer.id in active_customer_ids %}
+                                    <span class="admin-badge admin-badge-success" style="font-size: 0.75rem;">Has Subscription</span>
+                                {% else %}
+                                    <span class="admin-badge admin-badge-warning" style="font-size: 0.75rem;">No Subscription</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="{{ url_for('admin_customers.view_customer', customer_id=customer.id) }}" 
+                                   class="admin-btn admin-btn-secondary admin-btn-sm">
+                                    View
+                                </a>
+                                <a href="{{ url_for('admin_customers.edit_customer', customer_id=customer.id) }}" 
+                                   class="admin-btn admin-btn-secondary admin-btn-sm">
+                                    Edit
+                                </a>
+                                <form method="POST" action="{{ url_for('admin_customers.delete_customer', customer_id=customer.id) }}" 
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Are you sure you want to deactivate {{ customer.full_name }}?');">
+                                    <button type="submit" class="admin-btn admin-btn-danger admin-btn-sm">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="admin-empty-state">
+                            <p>No customers found.</p>
+                            <a href="{{ url_for('admin_customers.create_customer') }}" class="admin-btn admin-btn-primary">
+                                Add First Customer
+                            </a>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

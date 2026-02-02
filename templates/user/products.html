@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+
+{% block title %}Packages - Trade Signals{% endblock %}
+
+{% block content %}
+<div class="products-page">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Our Packages</h1>
+            <p class="page-subtitle">Explore our active trading packages</p>
+        </div>
+
+        <!-- Products Grid -->
+        {% if products %}
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <div class="product-icon">
+                    {% if 'Indices' in product.name %}
+                        <i data-lucide="trending-up"></i>
+                    {% elif 'Stock' in product.name and 'Intraday' not in product.name %}
+                        <i data-lucide="line-chart"></i>
+                    {% elif 'Intraday' in product.name %}
+                        <i data-lucide="zap"></i>
+                    {% elif 'Short Term' in product.name %}
+                        <i data-lucide="rocket"></i>
+                    {% elif 'Long Term' in product.name %}
+                        <i data-lucide="calendar"></i>
+                    {% elif 'Multi Bagger' in product.name %}
+                        <i data-lucide="gem"></i>
+                    {% elif 'Forex' in product.name %}
+                        <i data-lucide="dollar-sign"></i>
+                    {% elif 'Crypto' in product.name %}
+                        <i data-lucide="bitcoin"></i>
+                    {% else %}
+                        <i data-lucide="trending-up"></i>
+                    {% endif %}
+                </div>
+                <h3 class="product-title">{{ product.name }}</h3>
+                <p class="product-description">
+                    {{ product.description if product.description else 'Premium trading signals for this product category.' }}
+                </p>
+                <div class="product-pricing">
+                    {% if product.price == 0 %}
+                        <span class="price-label">Starting from</span>
+                        <span class="price-amount">Rs 0</span>
+                        <span class="price-period">per month</span>
+                    {% else %}
+                        <span class="price-label">Starting from</span>
+                        <span class="price-amount">Rs {{ "%.0f"|format(product.price) }}</span>
+                        <span class="price-period">per month</span>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('user_products.product_detail', product_id=product.id) }}" class="btn btn-primary btn-block">
+                    Learn More
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No packages available at the moment.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

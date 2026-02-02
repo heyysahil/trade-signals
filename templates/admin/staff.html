@@ -1,0 +1,91 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Staff Management - Admin{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header fade-in-on-scroll">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>Staff Management</h1>
+            <p class="admin-page-subtitle">Manage admin and staff accounts</p>
+        </div>
+        <a href="{{ url_for('admin_staff.create_staff') }}" class="admin-btn admin-btn-primary">
+            <span>➕</span> Add Staff
+        </a>
+    </div>
+</div>
+
+<!-- Staff Table -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.2s;">
+    <div class="table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Sr. No</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Date of Joining</th>
+                    <th>Status</th>
+                    <th>Password</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if staff %}
+                    {% for member in staff %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><strong>{{ member.username }}</strong></td>
+                        <td>{{ member.email }}</td>
+                        <td>
+                            <span class="admin-badge {% if member.role == 'admin' %}admin-badge-warning{% else %}admin-badge-secondary{% endif %}">
+                                {{ member.role|upper }}
+                            </span>
+                        </td>
+                        <td>{{ member.created_at.strftime('%d-%m-%Y') if member.created_at else 'N/A' }}</td>
+                        <td>
+                            {% if member.is_active %}
+                                <span class="admin-badge admin-badge-success">Active</span>
+                            {% else %}
+                                <span class="admin-badge admin-badge-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span style="font-family: monospace; color: var(--text-gray);">••••••••</span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="{{ url_for('admin_staff.edit_staff', staff_id=member.id) }}" 
+                                   class="admin-btn admin-btn-secondary admin-btn-sm">
+                                    Edit
+                                </a>
+                                {% if member.id != session.get('admin_id') %}
+                                <form method="POST" action="{{ url_for('admin_staff.delete_staff', staff_id=member.id) }}" 
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Are you sure you want to delete {{ member.username }}? This action cannot be undone.');">
+                                    <button type="submit" class="admin-btn admin-btn-danger admin-btn-sm">
+                                        Delete
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="admin-empty-state">
+                            <p>No staff members found.</p>
+                            <a href="{{ url_for('admin_staff.create_staff') }}" class="admin-btn admin-btn-primary">
+                                Add First Staff Member
+                            </a>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

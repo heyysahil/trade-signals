@@ -1,0 +1,155 @@
+{% extends "layout.html" %}
+
+{% block title %}Subscription Details - Trade Signals{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="container">
+        <!-- Page Header -->
+        <div style="margin-bottom: 2rem;">
+            <a href="{{ url_for('user_dashboard.dashboard') }}" class="back-link">← Back to Dashboard</a>
+            <h1 style="margin-top: 1rem;">Subscription Details</h1>
+        </div>
+
+        <!-- Subscription Information -->
+        <div class="subscriptions-table-container" style="margin-bottom: 2rem;">
+            <h2 style="margin-bottom: 1.5rem;">Subscription Information</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; padding: 1.5rem; background: var(--bg-secondary, #1a1a1a); border-radius: 0.5rem;">
+                <div>
+                    <div style="color: #888; font-size: 0.875rem; margin-bottom: 0.5rem;">Product Name</div>
+                    <div style="color: #fff; font-size: 1.125rem; font-weight: 600;">{{ subscription.product.name if subscription.product else 'N/A' }}</div>
+                </div>
+                <div>
+                    <div style="color: #888; font-size: 0.875rem; margin-bottom: 0.5rem;">Plan Name</div>
+                    <div style="color: #fff; font-size: 1.125rem;">{{ plan_name }}</div>
+                </div>
+                <div>
+                    <div style="color: #888; font-size: 0.875rem; margin-bottom: 0.5rem;">Duration</div>
+                    <div style="color: #fff; font-size: 1.125rem;">
+                        {% set days = (subscription.end_date - subscription.start_date).days %}
+                        {{ days }} days
+                    </div>
+                </div>
+                <div>
+                    <div style="color: #888; font-size: 0.875rem; margin-bottom: 0.5rem;">Start Date</div>
+                    <div style="color: #fff; font-size: 1.125rem;">{{ subscription.start_date.strftime('%d-%m-%Y') if subscription.start_date else 'N/A' }}</div>
+                </div>
+                <div>
+                    <div style="color: #888; font-size: 0.875rem; margin-bottom: 0.5rem;">End Date</div>
+                    <div style="color: #fff; font-size: 1.125rem;">{{ subscription.end_date.strftime('%d-%m-%Y') if subscription.end_date else 'N/A' }}</div>
+                </div>
+                <div>
+                    <div style="color: #888; font-size: 0.875rem; margin-bottom: 0.5rem;">Payment Status</div>
+                    <div>
+                        {% if payment_status == 'completed' %}
+                            <span class="badge badge-success">Completed</span>
+                        {% elif payment_status == 'pending' %}
+                            <span class="badge badge-warning">Pending</span>
+                        {% elif payment_status == 'failed' %}
+                            <span class="badge badge-danger">Failed</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Pending</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div style="color: #888; font-size: 0.875rem; margin-bottom: 0.5rem;">Subscription Status</div>
+                    <div>
+                        {% if subscription.status == 'approved' %}
+                            <span class="badge badge-success">Active</span>
+                        {% elif subscription.status == 'pending' %}
+                            <span class="badge badge-warning">Awaiting Admin Approval</span>
+                        {% elif subscription.status == 'rejected' %}
+                            <span class="badge badge-danger">Rejected</span>
+                        {% elif subscription.status == 'active' %}
+                            <span class="badge badge-success">Active</span>
+                        {% elif subscription.status == 'expired' %}
+                            <span class="badge badge-warning">Expired</span>
+                        {% elif subscription.status == 'cancelled' %}
+                            <span class="badge badge-danger">Cancelled</span>
+                        {% else %}
+                            <span class="badge badge-secondary">{{ subscription.status|title }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if subscription.approved_by and subscription.approved_at %}
+                <div>
+                    <div style="color: #888; font-size: 0.875rem; margin-bottom: 0.5rem;">Approved On</div>
+                    <div style="color: #fff; font-size: 1.125rem;">{{ subscription.approved_at.strftime('%d-%m-%Y %H:%M') }}</div>
+                </div>
+                {% endif %}
+                {% if subscription.rejection_reason %}
+                <div style="grid-column: 1 / -1;">
+                    <div style="color: #888; font-size: 0.875rem; margin-bottom: 0.5rem;">Rejection Reason</div>
+                    <div style="color: #ff4444; padding: 1rem; background: rgba(255, 68, 68, 0.1); border-radius: 0.5rem; border-left: 3px solid #ff4444;">
+                        {{ subscription.rejection_reason }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Payment Transactions -->
+        {% if transactions %}
+        <div class="subscriptions-table-container">
+            <h2 style="margin-bottom: 1.5rem;">Payment Transactions</h2>
+            <table class="subscriptions-table">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Amount</th>
+                        <th>Payment Method</th>
+                        <th>Reference Number</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>#{{ transaction.id }}</td>
+                        <td>Rs {{ "%.2f"|format(transaction.amount) }}</td>
+                        <td>{{ transaction.payment_method or 'N/A' }}</td>
+                        <td>{{ transaction.payment_reference or 'N/A' }}</td>
+                        <td>
+                            {% if transaction.status == 'completed' %}
+                                <span class="badge badge-success">Completed</span>
+                            {% elif transaction.status == 'pending' %}
+                                <span class="badge badge-warning">Pending</span>
+                            {% elif transaction.status == 'failed' %}
+                                <span class="badge badge-danger">Failed</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ transaction.status|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ transaction.created_at.strftime('%d-%m-%Y %H:%M') if transaction.created_at else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Signals Access (Only if APPROVED) -->
+        {% if subscription.status == 'approved' %}
+        <div style="margin-top: 2rem; padding: 1.5rem; background: var(--bg-secondary, #1a1a1a); border-radius: 0.5rem; text-align: center;">
+            <h3 style="margin-bottom: 1rem;">Access Your Signals</h3>
+            <p style="color: #888; margin-bottom: 1.5rem;">Your subscription is active. You can now access trading signals for this package.</p>
+            <a href="{{ url_for('user_signals.signals', product_id=subscription.product_id) }}" class="btn btn-primary">
+                View Signals
+            </a>
+        </div>
+        {% elif subscription.status == 'pending' %}
+        <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255, 193, 7, 0.1); border-radius: 0.5rem; border-left: 3px solid #ffc107; text-align: center;">
+            <h3 style="margin-bottom: 1rem; color: #ffc107;">Awaiting Admin Approval</h3>
+            <p style="color: #888;">Your subscription is pending admin approval. Signals will be available once approved.</p>
+        </div>
+        {% elif subscription.status == 'rejected' %}
+        <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(220, 53, 69, 0.1); border-radius: 0.5rem; border-left: 3px solid #dc3545; text-align: center;">
+            <h3 style="margin-bottom: 1rem; color: #dc3545;">Subscription Rejected</h3>
+            <p style="color: #888;">Your subscription has been rejected. Please contact support if you have questions.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}{% if customer %}Edit Customer{% else %}Add Customer{% endif %} - Admin{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header fade-in-on-scroll">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>{% if customer %}Edit Customer{% else %}Add New Customer{% endif %}</h1>
+            <p class="admin-page-subtitle">{% if customer %}Update customer details{% else %}Create a new customer account{% endif %}</p>
+        </div>
+        <a href="{{ url_for('admin_customers.customers') }}" class="admin-btn admin-btn-secondary">
+            ← Back to Customers
+        </a>
+    </div>
+</div>
+
+<!-- Customer Form -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.2s;">
+    <form method="POST" action="{% if customer %}{{ url_for('admin_customers.edit_customer', customer_id=customer.id) }}{% else %}{{ url_for('admin_customers.create_customer') }}{% endif %}">
+        <div style="display: grid; gap: 1.5rem;">
+            <div class="form-group">
+                <label for="full_name">Full Name *</label>
+                <input 
+                    type="text" 
+                    id="full_name" 
+                    name="full_name" 
+                    required
+                    value="{{ customer.full_name if customer else (form.full_name if form else '') }}"
+                    placeholder="Enter full name"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="mobile">Mobile Number *</label>
+                <input 
+                    type="text" 
+                    id="mobile" 
+                    name="mobile" 
+                    required
+                    value="{{ customer.mobile if customer else (form.mobile if form else '') }}"
+                    placeholder="Enter mobile number (10-15 digits)"
+                    pattern="[0-9]{10,15}"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    required
+                    value="{{ customer.email if customer else (form.email if form else '') }}"
+                    placeholder="Enter email address"
+                >
+            </div>
+
+            {% if not customer %}
+            <div class="form-group">
+                <label for="password">Password *</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password"
+                    required
+                    placeholder="Enter password (min 8 characters)"
+                    minlength="8"
+                >
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input 
+                        type="checkbox" 
+                        name="is_active" 
+                        {% if customer and customer.is_active or not customer %}checked{% endif %}
+                        style="width: auto;"
+                    >
+                    <span>Active Account</span>
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="submit" class="admin-btn admin-btn-primary">
+                    <span>💾</span>
+                    {% if customer %}Update Customer{% else %}Create Customer{% endif %}
+                </button>
+                <a href="{{ url_for('admin_customers.customers') }}" class="admin-btn admin-btn-secondary">
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Transaction Management - Admin{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header fade-in-on-scroll">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>Transaction Management Dashboard</h1>
+            <p class="admin-page-subtitle">View and manage payment history</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Section -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.2s;">
+    <div class="admin-table-header">
+        <h2>Filters</h2>
+    </div>
+    <form method="GET" action="{{ url_for('admin_transactions.transactions') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+        <div class="form-group">
+            <label for="start_date">Start Date</label>
+            <input type="date" id="start_date" name="start_date" value="{{ filter_start_date }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="end_date">End Date</label>
+            <input type="date" id="end_date" name="end_date" value="{{ filter_end_date }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="customer">Customer</label>
+            <select id="customer" name="customer">
+                <option value="">All Customers</option>
+                {% for customer in customers %}
+                <option value="{{ customer.id }}" {% if filter_customer_id == customer.id %}selected{% endif %}>
+                    {{ customer.full_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">All Statuses</option>
+                <option value="completed" {% if filter_status == 'completed' %}selected{% endif %}>Success</option>
+                <option value="pending" {% if filter_status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="failed" {% if filter_status == 'failed' %}selected{% endif %}>Failed</option>
+                <option value="refunded" {% if filter_status == 'refunded' %}selected{% endif %}>Refunded</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="sort_by">Sort By</label>
+            <select id="sort_by" name="sort_by">
+                <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date Created</option>
+                <option value="amount" {% if sort_by == 'amount' %}selected{% endif %}>Amount</option>
+                <option value="customer" {% if sort_by == 'customer' %}selected{% endif %}>Customer</option>
+            </select>
+        </div>
+        
+        <div style="display: flex; gap: 0.5rem; align-items: flex-end; flex-wrap: wrap;">
+            <button type="submit" class="admin-btn admin-btn-primary">Apply Filters</button>
+            <a href="{{ url_for('admin_transactions.transactions') }}" class="admin-btn admin-btn-secondary">Clear</a>
+            <a href="{{ url_for('admin_transactions.export_csv', **request.args) }}" class="admin-btn admin-btn-secondary">
+                Export CSV
+            </a>
+            <a href="{{ url_for('admin_transactions.export_excel', **request.args) }}" class="admin-btn admin-btn-secondary">
+                Export Excel
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Summary Cards -->
+<div class="admin-summary-cards">
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.3s;">
+        <div class="admin-summary-label">Total Transactions</div>
+        <div class="admin-summary-value">{{ total_transactions }}</div>
+    </div>
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.4s;">
+        <div class="admin-summary-label">Total Revenue</div>
+        <div class="admin-summary-value">Rs {{ "%.2f"|format(total_revenue) }}</div>
+    </div>
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.5s;">
+        <div class="admin-summary-label">Success Rate</div>
+        <div class="admin-summary-value">{{ success_rate }}%</div>
+    </div>
+    <div class="admin-summary-card fade-in-on-scroll" style="animation-delay: 0.6s;">
+        <div class="admin-summary-label">Average Transaction</div>
+        <div class="admin-summary-value">Rs {{ "%.2f"|format(average_transaction) }}</div>
+    </div>
+</div>
+
+<!-- Payment History Section -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.7s;">
+    <div class="admin-table-header">
+        <h2>Payment History</h2>
+        <form method="GET" action="{{ url_for('admin_transactions.transactions') }}" style="display: flex; gap: 0.5rem;">
+            <input type="text" name="search" placeholder="Search transactions..." 
+                   value="{{ search_query }}" 
+                   style="padding: 0.5rem; border: 2px solid var(--border-color); border-radius: 0.5rem; background: var(--bg-darker); color: var(--text-white);">
+            <input type="hidden" name="start_date" value="{{ filter_start_date or '' }}">
+            <input type="hidden" name="end_date" value="{{ filter_end_date or '' }}">
+            <input type="hidden" name="customer" value="{{ filter_customer_id or '' }}">
+            <input type="hidden" name="status" value="{{ filter_status or '' }}">
+            <input type="hidden" name="sort_by" value="{{ sort_by or 'date' }}">
+            <button type="submit" class="admin-btn admin-btn-secondary admin-btn-sm">Search</button>
+        </form>
+    </div>
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Payment Method</th>
+                    <th>Status</th>
+                    <th>Subscription</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if transactions %}
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>#{{ transaction.id }}</td>
+                        <td>{{ transaction.created_at.strftime('%d-%m-%Y %H:%M') if transaction.created_at else 'N/A' }}</td>
+                        <td>
+                            <a href="{{ url_for('admin_customers.view_customer', customer_id=transaction.user_id) }}" 
+                               style="color: var(--primary-color); text-decoration: none;">
+                                {{ transaction.user.full_name if transaction.user else 'N/A' }}
+                            </a>
+                        </td>
+                        <td style="font-weight: 600;">Rs {{ "%.2f"|format(transaction.amount) }}</td>
+                        <td>{{ transaction.payment_method or 'N/A' }}</td>
+                        <td>
+                            {% if transaction.status == 'completed' or transaction.status == 'success' %}
+                                <span class="admin-badge admin-badge-success">Success</span>
+                            {% elif transaction.status == 'pending' %}
+                                <span class="admin-badge admin-badge-warning">Pending</span>
+                            {% elif transaction.status == 'failed' %}
+                                <span class="admin-badge admin-badge-danger">Failed</span>
+                            {% else %}
+                                <span class="admin-badge admin-badge-secondary">{{ transaction.status|upper }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if transaction.subscription %}
+                                <a href="{{ url_for('admin_subscriptions.view_subscription', subscription_id=transaction.subscription_id) }}" 
+                                   style="color: var(--primary-color); text-decoration: none;">
+                                    {{ transaction.subscription.product.name if transaction.subscription.product else 'N/A' }}
+                                </a>
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="#" class="admin-btn admin-btn-secondary admin-btn-sm" 
+                               onclick="alert('Transaction ID: {{ transaction.id }}\\nReference: {{ transaction.payment_reference or 'N/A' }}\\nAmount: Rs {{ transaction.amount }}\\nStatus: {{ transaction.status }}'); return false;">
+                                View Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="admin-empty-state">
+                            <p>No transactions found.</p>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

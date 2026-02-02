@@ -1,0 +1,192 @@
+{% extends "layout.html" %}
+
+{% block title %}Payment - Trade Signals{% endblock %}
+
+{% block content %}
+<div class="payment-page">
+    <div class="container">
+        <div class="payment-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Complete Your Payment</h1>
+                <p class="page-subtitle">Secure checkout powered by industry-standard encryption</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('user_payment.payment') }}" id="paymentForm">
+                <div class="payment-grid">
+                    <!-- Subscription Summary Section -->
+                    <div class="payment-section">
+                        <h2 class="section-title">Order Summary</h2>
+                        <div class="details-card">
+                            {% if subscription %}
+                            <div class="detail-item">
+                                <span class="detail-label">Name</span>
+                                <span class="detail-value">{{ user.full_name }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Email</span>
+                                <span class="detail-value">{{ user.email }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Phone</span>
+                                <span class="detail-value">{{ user.mobile }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Product</span>
+                                <span class="detail-value">{{ subscription.product.name if subscription.product else 'N/A' }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Plan</span>
+                                <span class="detail-value">{{ plan_name if plan_name else 'Monthly Plan' }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Duration</span>
+                                <span class="detail-value">{{ duration_days if duration_days else '30' }} days</span>
+                            </div>
+                            <div class="detail-item highlight">
+                                <span class="detail-label">Total Amount</span>
+                                <span class="detail-value amount">₹{{ "%.0f"|format(amount) if amount else "0" }}</span>
+                            </div>
+                            {% else %}
+                            <p style="color: var(--text-muted); text-align: center; padding: var(--spacing-xl) 0;">No subscription found. Please go back and try again.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Payment Method Section -->
+                    <div class="payment-section">
+                        <h2 class="section-title">Payment Method</h2>
+                        
+                        <!-- UPI Payment Option -->
+                        <div class="payment-method active" id="upiMethod" onclick="selectPaymentMethod('upi')">
+                            <div class="method-header">
+                                <input type="radio" name="payment_method" value="upi" id="upi" checked>
+                                <label for="upi" class="method-label">
+                                    <i data-lucide="smartphone" style="width: 20px; height: 20px; margin-right: 8px;"></i>
+                                    UPI Payment
+                                </label>
+                            </div>
+                            <div class="method-content" id="upiContent">
+                                <div class="qr-code-placeholder">
+                                    <div class="qr-code">
+                                        <i data-lucide="qr-code" style="width: 80px; height: 80px; color: var(--text-muted); margin-bottom: 12px;"></i>
+                                        <p style="font-weight: 600; color: var(--text-primary);">Scan QR Code</p>
+                                        <p class="qr-hint">Use any UPI app to pay</p>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="transaction_ref">
+                                        <i data-lucide="hash" style="width: 14px; height: 14px; margin-right: 4px;"></i>
+                                        Transaction Reference *
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        id="transaction_ref" 
+                                        name="transaction_ref" 
+                                        required
+                                        placeholder="Enter transaction ID (12-digit UTR)"
+                                    >
+                                    <small class="form-help">Enter the 12-digit UTR/transaction ID from your UPI app</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bank Transfer Option -->
+                        <div class="payment-method" id="bankMethod" onclick="selectPaymentMethod('bank')">
+                            <div class="method-header">
+                                <input type="radio" name="payment_method" value="bank_transfer" id="bank_transfer">
+                                <label for="bank_transfer" class="method-label">
+                                    <i data-lucide="building" style="width: 20px; height: 20px; margin-right: 8px;"></i>
+                                    Bank Transfer
+                                </label>
+                            </div>
+                            <div class="method-content" id="bankContent" style="display: none;">
+                                <div class="bank-details">
+                                    <p><strong>Bank Account Details</strong></p>
+                                    <p><strong>Account Name:</strong> Trade Signals</p>
+                                    <p><strong>Account Number:</strong> 1234567890</p>
+                                    <p><strong>IFSC Code:</strong> SBIN0001234</p>
+                                    <p><strong>Bank:</strong> State Bank of India</p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="bank_transaction_ref">
+                                        <i data-lucide="hash" style="width: 14px; height: 14px; margin-right: 4px;"></i>
+                                        Transaction Reference *
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        id="bank_transaction_ref" 
+                                        name="transaction_ref" 
+                                        placeholder="Enter bank transaction reference"
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Notes & Actions -->
+                <div class="payment-confirmation">
+                    <div class="form-group">
+                        <label for="notes">
+                            <i data-lucide="message-square" style="width: 14px; height: 14px; margin-right: 4px;"></i>
+                            Additional Notes (Optional)
+                        </label>
+                        <textarea 
+                            id="notes" 
+                            name="notes" 
+                            rows="3" 
+                            placeholder="Any additional information about your payment..."
+                        ></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{{ url_for('user_products.products') }}" class="btn btn-secondary">← Back to Packages
+                            <i data-lucide="arrow-left" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                            Back
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="check-circle" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                            Confirm Payment
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Help Section -->
+                <div class="help-section">
+                    <p><i data-lucide="help-circle" style="width: 16px; height: 16px; margin-right: 6px;"></i> <strong>Need Help?</strong></p>
+                    <p>Email: support@tradesignal.tech · Phone: +91 99999 99999</p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function selectPaymentMethod(method) {
+        // Update active state
+        document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('active'));
+        
+        if (method === 'upi') {
+            document.getElementById('upiMethod').classList.add('active');
+            document.getElementById('upi').checked = true;
+            document.getElementById('upiContent').style.display = 'block';
+            document.getElementById('bankContent').style.display = 'none';
+        } else if (method === 'bank') {
+            document.getElementById('bankMethod').classList.add('active');
+            document.getElementById('bank_transfer').checked = true;
+            document.getElementById('bankContent').style.display = 'block';
+            document.getElementById('upiContent').style.display = 'none';
+        }
+    }
+
+    // Radio button change listeners
+    document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            selectPaymentMethod(this.value === 'upi' ? 'upi' : 'bank');
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

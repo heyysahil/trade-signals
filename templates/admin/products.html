@@ -1,0 +1,84 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Packages - Admin{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header fade-in-on-scroll">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>Package Management</h1>
+            <p class="admin-page-subtitle">Manage trading packages and services</p>
+        </div>
+        <a href="{{ url_for('admin_products.create_product') }}" class="admin-btn admin-btn-primary">
+            <span>➕</span> Create Package
+        </a>
+    </div>
+</div>
+
+<!-- Products Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem; margin-top: 2rem;">
+    {% if products %}
+        {% for product in products %}
+        <div class="admin-table-section fade-in-on-scroll" style="animation-delay: {{ loop.index * 0.1 }}s;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <div>
+                    <h3 style="color: var(--text-white); margin-bottom: 0.5rem; font-size: 1.5rem;">{{ product.name }}</h3>
+                    <span class="admin-badge {% if product.is_active %}admin-badge-success{% else %}admin-badge-secondary{% endif %}">
+                        {% if product.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+            
+            <p style="color: var(--text-gray); margin-bottom: 1.5rem; line-height: 1.6;">
+                {{ product.description }}
+            </p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-darker); border-radius: 0.5rem;">
+                <div>
+                    <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.25rem;">Trial Plan</div>
+                    <div style="color: var(--text-white); font-weight: 600;">Rs 0.00 / 3 days</div>
+                </div>
+                <div>
+                    <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.25rem;">Monthly Plan</div>
+                    <div style="color: var(--primary-color); font-weight: 600; font-size: 1.125rem;">
+                        Rs {{ "%.2f"|format(product.price) }} / {{ product.duration_days }} days
+                    </div>
+                </div>
+            </div>
+            
+            <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 1rem;">
+                Created: {{ product.created_at.strftime('%d-%m-%Y') if product.created_at else 'N/A' }}
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="{{ url_for('admin_products.view_product', product_id=product.id) }}" 
+                   class="admin-btn admin-btn-secondary admin-btn-sm">
+                    View
+                </a>
+                <a href="{{ url_for('admin_products.edit_product', product_id=product.id) }}" 
+                   class="admin-btn admin-btn-secondary admin-btn-sm">
+                    Edit
+                </a>
+                <form method="POST" action="{{ url_for('admin_products.delete_product', product_id=product.id) }}" 
+                      style="display: inline;"
+                      onsubmit="return confirm('Are you sure you want to delete product \"{{ product.name }}\"? This action cannot be undone.');">
+                    <button type="submit" class="admin-btn admin-btn-danger admin-btn-sm">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="admin-table-section fade-in-on-scroll" style="grid-column: 1 / -1;">
+            <div class="admin-empty-state">
+                <p>No products found.</p>
+                <a href="{{ url_for('admin_products.create_product') }}" class="admin-btn admin-btn-primary">
+                    Create First Product
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

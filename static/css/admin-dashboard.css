@@ -1,0 +1,550 @@
+/**
+ * Admin Dashboard – Modern layout, icons, animations
+ * All existing class names (admin-table, admin-btn, admin-badge, etc.) kept for compatibility.
+ */
+
+/* -------------------------------------------------------------------------
+   DESIGN TOKENS
+   ------------------------------------------------------------------------- */
+.admin-layout {
+    --adm-font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --adm-radius: 12px;
+    --adm-radius-sm: 8px;
+    --adm-radius-lg: 16px;
+    --adm-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --adm-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --adm-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --adm-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --adm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+    --adm-transition: 0.25s var(--adm-ease);
+}
+
+/* -------------------------------------------------------------------------
+   LAYOUT CONTAINERS (align with .container)
+   ------------------------------------------------------------------------- */
+.admin-header__container,
+.admin-main__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    width: 100%;
+}
+
+.admin-main {
+    padding: 28px 0 40px;
+    min-height: calc(100vh - 140px);
+}
+
+/* -------------------------------------------------------------------------
+   HEADER & NAV (modern alignment, icons)
+   ------------------------------------------------------------------------- */
+.admin-header {
+    font-family: var(--adm-font);
+}
+
+.admin-header__container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    min-height: 64px;
+}
+
+.admin-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--admin-primary, #2563EB);
+    text-decoration: none;
+    transition: color var(--adm-transition), transform var(--adm-transition);
+}
+
+.admin-brand:hover {
+    color: var(--admin-primary-hover, #1d4ed8);
+    transform: translateY(-1px);
+}
+
+.admin-brand__icon {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-brand__icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.admin-nav-menu {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 4px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.admin-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: var(--adm-radius-sm);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--admin-text-muted, #64748B);
+    text-decoration: none;
+    transition: background var(--adm-transition), color var(--adm-transition);
+}
+
+.admin-nav-link:hover {
+    color: var(--admin-primary, #2563EB);
+    background: #EFF6FF;
+}
+
+.admin-nav-link.active {
+    color: var(--admin-primary, #2563EB);
+    background: #EFF6FF;
+}
+
+.admin-nav-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+}
+
+.admin-nav-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.admin-nav-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--admin-border, #E2E8F0);
+    margin: 0 4px;
+    padding: 0;
+}
+
+.admin-nav-link--logout:hover {
+    color: #DC2626;
+    background: #FEF2F2;
+}
+
+/* Flash messages */
+.admin-flash-wrap {
+    padding: 0 20px 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.admin-flash-item {
+    animation: admSlideIn 0.4s var(--adm-ease);
+}
+
+@keyframes admSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* -------------------------------------------------------------------------
+   DASHBOARD PAGE – HEADER
+   ------------------------------------------------------------------------- */
+.admin-dash-header {
+    margin-bottom: 28px;
+}
+
+.admin-dash-header__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--admin-text, #0F172A);
+    margin: 0 0 6px 0;
+    line-height: 1.3;
+    font-family: var(--adm-font);
+}
+
+.admin-dash-header__icon {
+    width: 28px;
+    height: 28px;
+    color: var(--admin-primary, #2563EB);
+}
+
+.admin-dash-header__subtitle {
+    color: var(--admin-text-muted, #64748B);
+    font-size: 1rem;
+    margin: 0;
+    padding-left: 40px;
+    line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+    .admin-dash-header__subtitle {
+        padding-left: 0;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   DASHBOARD – SUMMARY CARDS (grid, icons, alignment)
+   ------------------------------------------------------------------------- */
+.admin-dash-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.admin-dash-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    background: var(--admin-card, #FFFFFF);
+    padding: 24px;
+    border-radius: var(--adm-radius);
+    border: 1px solid var(--admin-border, #E2E8F0);
+    box-shadow: var(--adm-shadow);
+    transition: box-shadow var(--adm-transition), border-color var(--adm-transition), transform var(--adm-transition);
+}
+
+.admin-dash-card:hover {
+    box-shadow: var(--adm-shadow-md);
+    border-color: #CBD5E1;
+    transform: translateY(-2px);
+}
+
+.admin-dash-card__icon-wrap {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--adm-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-dash-card__icon-wrap--customers {
+    background: #DBEAFE;
+    color: #1D4ED8;
+}
+
+.admin-dash-card__icon-wrap--subscriptions {
+    background: #DCFCE7;
+    color: #16A34A;
+}
+
+.admin-dash-card__icon {
+    width: 24px;
+    height: 24px;
+}
+
+.admin-dash-card__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-dash-card__label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--admin-text-muted, #64748B);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+}
+
+.admin-dash-card__value {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--admin-text, #0F172A);
+    margin: 0 0 10px 0;
+    line-height: 1.2;
+}
+
+.admin-dash-card__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #EFF6FF;
+    color: var(--admin-primary, #2563EB);
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.admin-dash-card__badge-icon {
+    width: 14px;
+    height: 14px;
+}
+
+/* -------------------------------------------------------------------------
+   DASHBOARD – SECTIONS (Signals by Product, Pending Subscriptions)
+   ------------------------------------------------------------------------- */
+.admin-dash-section {
+    background: var(--admin-card, #FFFFFF);
+    padding: 24px;
+    border-radius: var(--adm-radius);
+    border: 1px solid var(--admin-border, #E2E8F0);
+    box-shadow: var(--adm-shadow);
+    margin-bottom: 24px;
+}
+
+.admin-dash-section__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.admin-dash-section__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--admin-text, #0F172A);
+    margin: 0;
+    font-family: var(--adm-font);
+}
+
+.admin-dash-section__icon {
+    width: 22px;
+    height: 22px;
+    color: var(--admin-primary, #2563EB);
+}
+
+.admin-dash-section__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--admin-primary, #2563EB);
+    text-decoration: none;
+    transition: gap var(--adm-transition), color var(--adm-transition);
+}
+
+.admin-dash-section__link:hover {
+    color: var(--admin-primary-hover, #1d4ed8);
+    gap: 10px;
+}
+
+.admin-dash-section__link-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.admin-dash-section__body {
+    overflow-x: auto;
+}
+
+/* Tables – alignment and spacing (complements admin-theme) */
+.admin-dash-section .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+}
+
+.admin-dash-section .admin-table th {
+    text-align: left;
+    padding: 12px 16px;
+}
+
+.admin-dash-section .admin-table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+}
+
+.admin-dash-section .admin-table th:last-child,
+.admin-dash-section .admin-table td:last-child {
+    text-align: right;
+}
+
+.admin-table-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.admin-btn-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.admin-btn-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.admin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Empty state with icon */
+.admin-empty-state {
+    text-align: center;
+    padding: 40px 24px;
+    color: var(--admin-text-muted, #64748B);
+}
+
+.admin-empty-state__icon {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 12px;
+    display: block;
+    opacity: 0.6;
+}
+
+.admin-empty-state p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* -------------------------------------------------------------------------
+   SUBSCRIPTIONS – FILTERS ROW ALIGNMENT
+   ------------------------------------------------------------------------- */
+.admin-filters-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+    align-items: end; /* keep selects and buttons on same baseline */
+}
+
+.admin-filters-form .form-group {
+    margin-bottom: 0;
+}
+
+.admin-filters-form-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+@media (max-width: 768px) {
+    .admin-filters-form {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   SCROLL / OBSERVER ANIMATIONS
+   ------------------------------------------------------------------------- */
+.adm-observe {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s var(--adm-ease), transform 0.6s var(--adm-ease);
+    transition-delay: calc(0.05s * (var(--adm-delay, 0) * 10));
+}
+
+.adm-observe.adm-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+    .adm-observe {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   FOOTER
+   ------------------------------------------------------------------------- */
+.admin-footer__inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px;
+    border-top: 1px solid var(--admin-border, #E2E8F0);
+    background: var(--admin-card, #FFFFFF);
+    color: var(--admin-text-muted, #64748B);
+    font-size: 0.875rem;
+}
+
+.admin-footer__inner p {
+    margin: 0;
+}
+
+.admin-footer__icon {
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
+}
+
+/* -------------------------------------------------------------------------
+   RESPONSIVE
+   ------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    .admin-header__container {
+        flex-direction: column;
+        align-items: stretch;
+        min-height: auto;
+        padding: 12px 0;
+    }
+
+    .admin-nav-menu {
+        flex-direction: column;
+        width: 100%;
+        gap: 2px;
+    }
+
+    .admin-nav-link {
+        width: 100%;
+        padding: 10px 14px;
+    }
+
+    .admin-nav-sep {
+        width: 100%;
+        height: 1px;
+        margin: 8px 0;
+    }
+
+    .admin-dash-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-dash-section {
+        padding: 20px;
+    }
+
+    .admin-dash-section .admin-table th,
+    .admin-dash-section .admin-table td {
+        padding: 10px 12px;
+        font-size: 0.875rem;
+    }
+
+    .admin-table-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-table-actions .admin-btn {
+        justify-content: center;
+    }
+}

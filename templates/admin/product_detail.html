@@ -1,0 +1,95 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Package Details - {{ product.name }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header fade-in-on-scroll">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>Package Details</h1>
+            <p class="admin-page-subtitle">{{ product.name }}</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <a href="{{ url_for('admin_products.edit_product', product_id=product.id) }}" 
+               class="admin-btn admin-btn-primary">
+                Edit Package
+            </a>
+            <a href="{{ url_for('admin_products.products') }}" class="admin-btn admin-btn-secondary">
+                ← Back to Packages
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Package Information -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.2s;">
+    <h2 style="margin-bottom: 1.5rem; color: var(--text-white);">Package Information</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+        <div>
+            <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.5rem;">Package Name</div>
+            <div style="color: var(--text-white); font-size: 1.125rem; font-weight: 600;">{{ product.name }}</div>
+        </div>
+        <div>
+            <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.5rem;">Price</div>
+            <div style="color: var(--primary-color); font-size: 1.125rem; font-weight: 600;">Rs {{ "%.2f"|format(product.price) }}</div>
+        </div>
+        <div>
+            <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.5rem;">Duration</div>
+            <div style="color: var(--text-white); font-size: 1.125rem;">{{ product.duration_days }} days</div>
+        </div>
+        <div>
+            <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.5rem;">Status</div>
+            <div>
+                {% if product.is_active %}
+                    <span class="admin-badge admin-badge-success">Active</span>
+                {% else %}
+                    <span class="admin-badge admin-badge-secondary">Inactive</span>
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.5rem;">Total Subscriptions</div>
+            <div style="color: var(--text-white); font-size: 1.125rem; font-weight: 600;">{{ subscriptions_count }}</div>
+        </div>
+        <div>
+            <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.5rem;">Active Subscriptions</div>
+            <div style="color: var(--text-white); font-size: 1.125rem; font-weight: 600;">{{ active_subscriptions }}</div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+        <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.5rem;">Description</div>
+        <div style="color: var(--text-light); line-height: 1.6;">{{ product.description }}</div>
+    </div>
+    
+    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+        <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.5rem;">Created Date</div>
+        <div style="color: var(--text-light);">{{ product.created_at.strftime('%d-%m-%Y %H:%M') if product.created_at else 'N/A' }}</div>
+    </div>
+    
+    {% if product.updated_at and product.updated_at != product.created_at %}
+    <div style="margin-top: 1rem;">
+        <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.5rem;">Last Updated</div>
+        <div style="color: var(--text-light);">{{ product.updated_at.strftime('%d-%m-%Y %H:%M') if product.updated_at else 'N/A' }}</div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Pricing Plans -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.3s;">
+    <h2 style="margin-bottom: 1.5rem; color: var(--text-white);">Available Plans</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+        <div style="padding: 1.5rem; background: var(--bg-darker); border-radius: 0.75rem; border: 1px solid var(--border-color);">
+            <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.5rem;">Trial Plan</div>
+            <div style="color: var(--text-white); font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">Rs 0.00</div>
+            <div style="color: var(--text-gray); font-size: 0.875rem;">3 days</div>
+        </div>
+        <div style="padding: 1.5rem; background: var(--bg-darker); border-radius: 0.75rem; border: 2px solid var(--primary-color);">
+            <div style="color: var(--text-gray); font-size: 0.875rem; margin-bottom: 0.5rem;">Monthly Plan</div>
+            <div style="color: var(--primary-color); font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">Rs {{ "%.2f"|format(product.price) }}</div>
+            <div style="color: var(--text-gray); font-size: 0.875rem;">{{ product.duration_days }} days</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

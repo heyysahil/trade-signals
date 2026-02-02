@@ -1,0 +1,173 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}API & Access Keys - Admin{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header fade-in-on-scroll">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>API & Access Key Management</h1>
+            <p class="admin-page-subtitle">Manage API keys and access keys for integrations</p>
+        </div>
+    </div>
+</div>
+
+<!-- API Keys Section -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.2s;">
+    <div class="admin-table-header">
+        <h2>API Keys</h2>
+        <button type="button" class="admin-btn admin-btn-primary" onclick="showCreateKeyModal('api_key')">
+            <span>➕</span> Create API Key
+        </button>
+    </div>
+    <div class="table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Key Name</th>
+                    <th>Key Value</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if api_keys %}
+                    {% for key in api_keys %}
+                    <tr>
+                        <td><strong>{{ key.name }}</strong></td>
+                        <td><code style="background: var(--bg-darker); padding: 0.25rem 0.5rem; border-radius: 4px;">{{ key.value }}</code></td>
+                        <td>{{ key.created_at.strftime('%d-%m-%Y %H:%M') if key.created_at else 'N/A' }}</td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <form method="POST" action="{{ url_for('admin_api_keys.regenerate_api_key', key_id=key.id) }}" style="display: inline;">
+                                    <button type="submit" class="admin-btn admin-btn-secondary admin-btn-sm" 
+                                            onclick="return confirm('Regenerate API key {{ key.name }}? The old key will be invalidated.')">
+                                        Regenerate
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin_api_keys.delete_api_key', key_id=key.id) }}" style="display: inline;">
+                                    <button type="submit" class="admin-btn admin-btn-danger admin-btn-sm" 
+                                            onclick="return confirm('Delete API key {{ key.name }}? This action cannot be undone.')">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="admin-empty-state">
+                            <p>No API keys found.</p>
+                            <button type="button" class="admin-btn admin-btn-primary" onclick="showCreateKeyModal('api_key')">
+                                Create First API Key
+                            </button>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Access Keys Section -->
+<div class="admin-table-section fade-in-on-scroll" style="animation-delay: 0.4s;">
+    <div class="admin-table-header">
+        <h2>Access Keys</h2>
+        <button type="button" class="admin-btn admin-btn-primary" onclick="showCreateKeyModal('access_key')">
+            <span>➕</span> Create Access Key
+        </button>
+    </div>
+    <div class="table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Key Name</th>
+                    <th>Key Value</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if access_keys %}
+                    {% for key in access_keys %}
+                    <tr>
+                        <td><strong>{{ key.name }}</strong></td>
+                        <td><code style="background: var(--bg-darker); padding: 0.25rem 0.5rem; border-radius: 4px;">{{ key.value }}</code></td>
+                        <td>{{ key.created_at.strftime('%d-%m-%Y %H:%M') if key.created_at else 'N/A' }}</td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <form method="POST" action="{{ url_for('admin_api_keys.regenerate_api_key', key_id=key.id) }}" style="display: inline;">
+                                    <button type="submit" class="admin-btn admin-btn-secondary admin-btn-sm" 
+                                            onclick="return confirm('Regenerate access key {{ key.name }}? The old key will be invalidated.')">
+                                        Regenerate
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin_api_keys.delete_api_key', key_id=key.id) }}" style="display: inline;">
+                                    <button type="submit" class="admin-btn admin-btn-danger admin-btn-sm" 
+                                            onclick="return confirm('Delete access key {{ key.name }}? This action cannot be undone.')">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="admin-empty-state">
+                            <p>No access keys found.</p>
+                            <button type="button" class="admin-btn admin-btn-primary" onclick="showCreateKeyModal('access_key')">
+                                Create First Access Key
+                            </button>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for creating keys -->
+<div id="createKeyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card); padding: 2rem; border-radius: 0.5rem; max-width: 500px; width: 90%;">
+        <h2 id="modalTitle" style="margin-bottom: 1rem;">Create Key</h2>
+        <form method="POST" action="{{ url_for('admin_api_keys.create_api_key') }}">
+            <input type="hidden" id="key_type" name="key_type" value="">
+            <div class="form-group">
+                <label for="key_name">Key Name *</label>
+                <input type="text" id="key_name" name="key_name" required placeholder="e.g., production_api_key">
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="admin-btn admin-btn-primary">Create Key</button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="hideCreateKeyModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showCreateKeyModal(keyType) {
+    const modal = document.getElementById('createKeyModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const keyTypeInput = document.getElementById('key_type');
+    
+    keyTypeInput.value = keyType;
+    modalTitle.textContent = keyType === 'api_key' ? 'Create API Key' : 'Create Access Key';
+    modal.style.display = 'flex';
+}
+
+function hideCreateKeyModal() {
+    document.getElementById('createKeyModal').style.display = 'none';
+    document.getElementById('key_name').value = '';
+}
+
+// Close modal on outside click
+document.getElementById('createKeyModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideCreateKeyModal();
+    }
+});
+</script>
+{% endblock %}

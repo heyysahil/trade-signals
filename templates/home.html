@@ -1,0 +1,255 @@
+{% extends "layout.html" %}
+
+{% block title %}Home - Trade Signals{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/homepage-packages.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section - 2026 Modern Split Layout -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-grid">
+            <!-- LEFT: Content -->
+            <div class="hero-content-left">
+                <!-- Bold Headline -->
+                <h1 class="hero-headline-modern">
+                    AI Signal Engine for<br>Smarter Trading
+                </h1>
+                
+                <!-- Concise Subtext -->
+                <p class="hero-subtext-minimal">
+                    Get real-time, high-accuracy insights for stocks, options, and commodities,
+                    built to help you earn simple, consistent income from the markets.
+                </p>
+                
+                <!-- CTA Buttons -->
+                <div class="hero-cta-group">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('user_dashboard.dashboard') }}" class="btn-hero-primary">
+                            <span>Open Dashboard</span>
+                            <i data-lucide="arrow-right"></i>
+                        </a>
+                        <a href="{% if app_settings and app_settings.show_pricing_on_home %}#services{% else %}#about{% endif %}" class="btn-hero-ghost">
+                            See How It Works
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('auth.register') }}" class="btn-hero-primary">
+                            <span>View Live Signals</span>
+                            <i data-lucide="arrow-right"></i>
+                        </a>
+                        <a href="{% if app_settings and app_settings.show_pricing_on_home %}#services{% else %}#about{% endif %}" class="btn-hero-ghost">
+                            See How It Works
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Compact Inline Stats -->
+                <div class="hero-stats-inline">
+                    <div class="stat-pill">
+                        <i data-lucide="check-circle"></i>
+                        <span>95% Accuracy</span>
+                    </div>
+                    <div class="stat-pill">
+                        <i data-lucide="users"></i>
+                        <span>50K+ Traders</span>
+                    </div>
+                    <div class="stat-pill">
+                        <i data-lucide="activity"></i>
+                        <span>Live Market Data</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RIGHT: Interactive Visual -->
+            <div class="hero-content-right">
+                <div class="hero-visual-container">
+                    <!-- Product Dashboard Preview -->
+                    <div class="dashboard-card glass">
+                        <div class="dashboard-header">
+                            <div class="dashboard-title">
+                                <i data-lucide="trending-up"></i>
+                                <span>Live Signals</span>
+                            </div>
+                            <div class="status-badge live">
+                                <span class="pulse-dot"></span>
+                                <span>Active</span>
+                            </div>
+                        </div>
+                        
+                        <div class="signal-preview">
+                            <div class="signal-row">
+                                <div class="signal-info">
+                                    <span class="signal-symbol">NIFTY 50</span>
+                                    <span class="signal-type">Call Option</span>
+                                </div>
+                                <div class="signal-metrics">
+                                    <span class="metric-value success">+12.5%</span>
+                                    <span class="metric-label">Return</span>
+                                </div>
+                            </div>
+                            <div class="signal-row">
+                                <div class="signal-info">
+                                    <span class="signal-symbol">RELIANCE</span>
+                                    <span class="signal-type">Intraday</span>
+                                </div>
+                                <div class="signal-metrics">
+                                    <span class="metric-value success">+8.3%</span>
+                                    <span class="metric-label">Return</span>
+                                </div>
+                            </div>
+                            <div class="signal-row">
+                                <div class="signal-info">
+                                    <span class="signal-symbol">BANKNIFTY</span>
+                                    <span class="signal-type">Put Option</span>
+                                </div>
+                                <div class="signal-metrics">
+                                    <span class="metric-value success">+15.2%</span>
+                                    <span class="metric-label">Return</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Floating Metric Cards -->
+                    <div class="floating-metric metric-1">
+                        <div class="metric-icon">
+                            <i data-lucide="target"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-number">95%</div>
+                            <div class="metric-label">Win Rate</div>
+                        </div>
+                    </div>
+                    
+                    <div class="floating-metric metric-2">
+                        <div class="metric-icon">
+                            <i data-lucide="trending-up"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-number">₹2.8L</div>
+                            <div class="metric-label">Avg Profit</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if app_settings and app_settings.show_pricing_on_home %}
+<!-- Services Section -->
+<section id="services" class="services-section fade-in-on-scroll">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title section-title-animated">Our Trading Services</h2>
+            <p class="section-subtitle">Comprehensive trading solutions tailored for every investor</p>
+        </div>
+
+        <div class="services-grid stagger-children">
+            {% set packages = [
+                {'name': 'Indices Option', 'description': 'Real-time signals for indices options trading with high accuracy predictions and risk management.'},
+                {'name': 'Stock Option', 'description': 'Strategic stock options signals with precise entry and exit points for optimal profit potential.'},
+                {'name': 'Intraday Stocks', 'description': 'Day trading signals for quick profits with AI-powered intraday market analysis and alerts.'},
+                {'name': 'Stocks Short Term', 'description': 'Short-term swing trading signals for high-momentum stocks with quick returns on investment.'}
+            ] %}
+            {% for package in packages %}
+            <div class="card-3d-wrapper">
+                <div class="service-card card-3d">
+                    <div class="service-icon">E</div>
+                    <h3 class="service-title">{{ package.name }}</h3>
+                    <p class="service-description">{{ package.description }}</p>
+                    <a href="{{ url_for('user_products.products') }}" class="btn btn-primary service-btn">
+                        View Signals <i data-lucide="arrow-right" class="inline-icon"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- About Section - Hero Style with Conversion Focus -->
+<section id="about" class="about-section fade-in-on-scroll">
+    <div class="container">
+        <div class="about-content">
+            <!-- LEFT SIDE - CONTENT -->
+            <div class="about-content-left">
+                <!-- Pill badge -->
+                <div class="about-badge">
+                    <i data-lucide="sparkles"></i>
+                    <span>AI-Powered Trading Platform</span>
+                </div>
+                
+                <!-- Hero headline -->
+                <h2 class="about-hero-headline">
+                    AI-Powered Trading,<br>
+                    Built for <span class="gradient-text">Consistent Profits</span>
+                </h2>
+                
+                <!-- Short subtext -->
+                <p class="about-subtext">
+                    India's first AI-driven signal engine delivering 95% accurate market insights. 
+                    Trusted by 50,000+ traders to make smarter decisions and build consistent income.
+                </p>
+                
+                <!-- Compact feature list (2x2) -->
+                <div class="about-features-compact">
+                    <div class="feature-compact-item">
+                        <div class="feature-compact-icon">
+                            <i data-lucide="zap"></i>
+                        </div>
+                        <div class="feature-compact-text">
+                            <h4>AI-Driven Signals</h4>
+                            <p>Real-time pattern analysis</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-compact-item">
+                        <div class="feature-compact-icon">
+                            <i data-lucide="trending-up"></i>
+                        </div>
+                        <div class="feature-compact-text">
+                            <h4>95% Accuracy Rate</h4>
+                            <p>Consistently high success</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-compact-item">
+                        <div class="feature-compact-icon">
+                            <i data-lucide="shield-check"></i>
+                        </div>
+                        <div class="feature-compact-text">
+                            <h4>Bank-Grade Security</h4>
+                            <p>ISO certified platform</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-compact-item">
+                        <div class="feature-compact-icon">
+                            <i data-lucide="headphones"></i>
+                        </div>
+                        <div class="feature-compact-text">
+                            <h4>24/7 Support</h4>
+                            <p>Expert help anytime</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RIGHT SIDE - VISUAL -->
+            <div class="about-content-right">
+                <div class="about-visual-wrapper">
+                    <img src="{{ url_for('static', filename='images/Real_time_analytics.jpg') }}" 
+                         alt="AI-Powered Trading Dashboard" 
+                         class="about-visual-image"
+                         loading="lazy"
+                         onerror="this.style.display='none';">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

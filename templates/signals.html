@@ -1,0 +1,198 @@
+{% extends "layout.html" %}
+
+{% block title %}Live Signals - Trade Signals{% endblock %}
+
+{% block content %}
+<!-- Signals Hero Section -->
+<section class="signals-hero">
+    <div class="container">
+        <div class="signals-hero-content">
+            <div class="hero-badge">
+                <i data-lucide="activity"></i>
+                <span>Live Trading Signals</span>
+            </div>
+            <h1>Trading Signals Dashboard</h1>
+            <p class="hero-subtitle">Track real-time trading signals with performance insights and comprehensive analytics</p>
+        </div>
+    </div>
+</section>
+
+<!-- Main Signals Content -->
+<div class="signals-page">
+    <div class="container">
+        <!-- KPI Stats Bar -->
+        <div class="kpi-stats-bar fade-in-on-scroll">
+            <div class="kpi-item">
+                <i data-lucide="bar-chart-3" class="kpi-icon"></i>
+                <div class="kpi-content">
+                    <div class="kpi-value">{{ total_signals }}</div>
+                    <div class="kpi-label">Total Signals</div>
+                </div>
+            </div>
+            <div class="kpi-item">
+                <i data-lucide="zap" class="kpi-icon"></i>
+                <div class="kpi-content">
+                    <div class="kpi-value">{{ active_count }}</div>
+                    <div class="kpi-label">Active</div>
+                </div>
+            </div>
+            <div class="kpi-item">
+                <i data-lucide="clock" class="kpi-icon"></i>
+                <div class="kpi-content">
+                    <div class="kpi-value">{{ pending_count }}</div>
+                    <div class="kpi-label">Pending</div>
+                </div>
+            </div>
+            <div class="kpi-item kpi-accent">
+                <i data-lucide="target" class="kpi-icon"></i>
+                <div class="kpi-content">
+                    <div class="kpi-value">{{ win_rate }}%</div>
+                    <div class="kpi-label">Win Rate</div>
+                </div>
+            </div>
+            <div class="kpi-item kpi-profit">
+                <i data-lucide="trending-up" class="kpi-icon"></i>
+                <div class="kpi-content">
+                    <div class="kpi-value">₹{{ "%.0f"|format(total_profit) }}</div>
+                    <div class="kpi-label">Total Profit</div>
+                </div>
+            </div>
+            <div class="kpi-item kpi-loss">
+                <i data-lucide="trending-down" class="kpi-icon"></i>
+                <div class="kpi-content">
+                    <div class="kpi-value">₹{{ "%.0f"|format(total_loss) }}</div>
+                    <div class="kpi-label">Total Loss</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signals Table Card -->
+        <div class="signals-table-card fade-in-on-scroll">
+            <div class="signals-table-header">
+                <h2>
+                    <i data-lucide="activity"></i>
+                    Live Trading Signals
+                </h2>
+                {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
+                    <i data-lucide="unlock"></i>
+                    Unlock All Signals
+                </a>
+                {% endif %}
+            </div>
+            
+            {% if signals %}
+            <div class="table-responsive">
+                <table class="signals-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Type</th>
+                            <th>Entry</th>
+                            <th>Entry Time</th>
+                            <th>Exit</th>
+                            <th>Exit Time</th>
+                            <th>Duration</th>
+                            <th>P&L</th>
+                            <th>Status</th>
+                            <th>Product</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for signal in signals %}
+                        <tr class="signal-row {% if not current_user.is_authenticated and loop.index > 3 %}signal-locked{% endif %}">
+                            <td>
+                                <strong class="symbol-text">{{ signal.symbol }}</strong>
+                            </td>
+                            <td>
+                                {% if signal.signal_type|lower == 'buy' %}
+                                    <span class="signal-badge signal-buy">
+                                        <i data-lucide="arrow-up"></i>
+                                        BUY
+                                    </span>
+                                {% else %}
+                                    <span class="signal-badge signal-sell">
+                                        <i data-lucide="arrow-down"></i>
+                                        SELL
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td><span class="price-value">{{ "%.2f"|format(signal.entry_price) }}</span></td>
+                            <td><span class="time-text">{{ signal.entry_time.strftime('%d %b, %H:%M') if signal.entry_time else 'N/A' }}</span></td>
+                            <td><span class="price-value">{{ "%.2f"|format(signal.exit_price) if signal.exit_price else '—' }}</span></td>
+                            <td><span class="time-text">{{ signal.exit_time.strftime('%d %b, %H:%M') if signal.exit_time else '—' }}</span></td>
+                            <td>
+                                <span class="duration-badge">{{ signal.calculate_duration() }}</span>
+                            </td>
+                            <td>
+                                {% if signal.profit_loss %}
+                                    <span class="pnl-value {% if signal.profit_loss > 0 %}pnl-profit{% elif signal.profit_loss < 0 %}pnl-loss{% endif %}">
+                                        {% if signal.profit_loss > 0 %}+{% endif %}₹{{ "%.0f"|format(signal.profit_loss) }}
+                                    </span>
+                                {% else %}
+                                    <span class="pnl-value pnl-neutral">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if signal.status == 'PROFIT' %}
+                                    <span class="status-badge status-profit">
+                                        <i data-lucide="trending-up"></i>
+                                        PROFIT
+                                    </span>
+                                {% elif signal.status == 'LOSS' %}
+                                    <span class="status-badge status-loss">
+                                        <i data-lucide="trending-down"></i>
+                                        LOSS
+                                    </span>
+                                {% elif signal.status == 'ACTIVE' %}
+                                    <span class="status-badge status-active">
+                                        <i data-lucide="zap"></i>
+                                        ACTIVE
+                                    </span>
+                                {% else %}
+                                    <span class="status-badge status-pending">{{ signal.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if signal.product %}
+                                    <span class="product-tag">{{ signal.product.name }}</span>
+                                {% else %}
+                                    <span class="product-tag">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i data-lucide="trending-up"></i>
+                <p>No signals available at the moment.</p>
+                {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Get Started</a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if not current_user.is_authenticated %}
+            <div class="signals-cta-banner">
+                <div class="cta-content">
+                    <div class="cta-icon">
+                        <i data-lucide="lock"></i>
+                    </div>
+                    <div class="cta-text">
+                        <h3>Unlock Premium Signals</h3>
+                        <p>Get real-time updates, advanced analytics, and priority support</p>
+                    </div>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-large">
+                        <i data-lucide="rocket"></i>
+                        Start Free Trial
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

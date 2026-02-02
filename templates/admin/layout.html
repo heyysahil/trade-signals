@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel - Trade Signals{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-theme.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-layout">
+    <!-- Admin Header -->
+    <header class="admin-header">
+        <div class="container">
+            <nav class="admin-nav">
+                {% if session.get('admin_role') == 'superadmin' %}
+                <a href="{{ url_for('admin_dashboard.dashboard') }}" class="admin-brand">
+                    <span>👤</span>
+                    <span>Admin</span>
+                </a>
+                {% else %}
+                <a href="{{ url_for('admin_signals.signals') }}" class="admin-brand">
+                    <span>👤</span>
+                    <span>Admin</span>
+                </a>
+                {% endif %}
+                
+                <!-- Notification Bell -->
+                <div class="admin-notification-bell" id="notificationBell">
+                    <button class="notification-btn" onclick="toggleNotifications(event)">
+                        <i data-lucide="bell"></i>
+                        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                    </button>
+                    
+                    <!-- Notification Dropdown -->
+                    <div class="notification-dropdown" id="notificationDropdown" style="display: none;">
+                        <div class="notification-header">
+                            <h3>Notifications</h3>
+                            <button class="mark-all-read-btn" onclick="markAllAsRead()">Mark all as read</button>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="notification-loading">Loading notifications...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <ul class="admin-nav-menu">
+                    {% if session.get('admin_role') == 'superadmin' %}
+                    <li><a href="{{ url_for('admin_dashboard.dashboard') }}" class="{% if request.endpoint == 'admin_dashboard.dashboard' %}active{% endif %}">Dashboard</a></li>
+                    <li><a href="{{ url_for('admin_staff.staff') }}" class="{% if request.endpoint == 'admin_staff.staff' %}active{% endif %}">Staff</a></li>
+                    <li><a href="{{ url_for('admin_customers.customers') }}" class="{% if request.endpoint == 'admin_customers.customers' %}active{% endif %}">Customers</a></li>
+                    <li><a href="{{ url_for('admin_subscriptions.subscriptions') }}" class="{% if request.endpoint == 'admin_subscriptions.subscriptions' %}active{% endif %}">Subscriptions</a></li>
+                    <li><a href="{{ url_for('admin_transactions.transactions') }}" class="{% if request.endpoint == 'admin_transactions.transactions' %}active{% endif %}">Transactions</a></li>
+                    <li><a href="{{ url_for('admin_settings.settings') }}" class="{% if request.endpoint == 'admin_settings.settings' %}active{% endif %}">Settings</a></li>
+                    <li><a href="{{ url_for('admin_api_keys.api_keys') }}" class="{% if request.endpoint == 'admin_api_keys.api_keys' %}active{% endif %}">API Keys</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('admin_signals.signals') }}" class="{% if request.endpoint == 'admin_signals.signals' %}active{% endif %}">Signals</a></li>
+                    {% if session.get('admin_role') == 'superadmin' %}
+                    <li><a href="{{ url_for('admin_products.products') }}" class="{% if request.endpoint == 'admin_products.products' %}active{% endif %}">Packages</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('admin_auth.logout') }}">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="admin-dashboard">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="admin-footer">
+        <p>Admin Panel © 2026 | Trade Signals</p>
+    </footer>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="{{ url_for('static', filename='js/admin-init.js') }}"></script>
+    <script>
+        // Auto-dismiss admin flash messages (1.5s for success)
+        (function() {
+            document.querySelectorAll('.alert-success').forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.animation = 'toastSlideOut 0.3s ease-in forwards';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 300);
+                }, 1500);
+            });
+
+            document.querySelectorAll('.alert-info').forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.animation = 'toastSlideOut 0.3s ease-in forwards';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 300);
+                }, 2500);
+            });
+        })();
+        
+        // Admin Notification System
+        let notificationsLoaded = false;
+        
+        // Fetch unread count on page load
+        function fetchUnreadCount() {
+            fetch('/admin/notifications/unread-count')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateNotificationBadge(data.unread_count);
+                    }
+                })
+                .catch(error => console.error('Error fetching unread count:', error));
+        }
+        
+        // Update notification badge
+        function updateNotificationBadge(count) {
+            const badge = document.getElementById('notificationBadge');
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+        
+        // Toggle notification dropdown
+        function toggleNotifications(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('notificationDropdown');
+            
+            if (dropdown) {
+                if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+                    dropdown.style.display = 'block';
+                    if (!notificationsLoaded) {
+                        loadNotifications();
+                        notificationsLoaded = true;
+                    }
+                } else {
+                    // Close dropdown when clicking bell again
+                    dropdown.style.display = 'none';
+                }
+            }
+        }
+        
+        // Load notifications
+        function loadNotifications() {
+            const listContainer = document.getElementById('notificationList');
+            listContainer.innerHTML = '<div class="notification-loading">Loading notifications...</div>';
+            
+            fetch('/admin/notifications?limit=50')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayNotifications(data.notifications);
+                    } else {
+                        listContainer.innerHTML = '<div class="notification-error">Failed to load notifications</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                    listContainer.innerHTML = '<div class="notification-error">Failed to load notifications</div>';
+                });
+        }
+        
+        // Display notifications
+        function displayNotifications(notifications) {
+            const listContainer = document.getElementById('notificationList');
+            
+            if (notifications.length === 0) {
+                listContainer.innerHTML = '<div class="notification-empty">No notifications</div>';
+                return;
+            }
+            
+            listContainer.innerHTML = '';
+            notifications.forEach(notification => {
+                const notifElement = createNotificationElement(notification);
+                listContainer.appendChild(notifElement);
+            });
+        }
+        
+        // Create notification element
+        function createNotificationElement(notification) {
+            const div = document.createElement('div');
+            div.className = 'notification-item' + (notification.is_read ? ' read' : ' unread');
+            div.onclick = () => handleNotificationClick(notification.id);
+            
+            const icon = getNotificationIcon(notification.type);
+            const time = formatNotificationTime(notification.created_at);
+            
+            div.innerHTML = `
+                <div class="notification-icon ${notification.type}">
+                    <i data-lucide="${icon}"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">${notification.title}</div>
+                    <div class="notification-message">${notification.message}</div>
+                    <div class="notification-time">${time}</div>
+                </div>
+                ${!notification.is_read ? '<div class="notification-unread-dot"></div>' : ''}
+            `;
+            
+            // Initialize lucide icons for this element
+            if (window.lucide) {
+                window.lucide.createIcons({
+                    icons: div.querySelectorAll('[data-lucide]')
+                });
+            }
+            
+            return div;
+        }
+        
+        // Get icon for notification type
+        function getNotificationIcon(type) {
+            const icons = {
+                'subscription': 'credit-card',
+                'signal': 'trending-up',
+                'user': 'user-plus',
+                'system': 'alert-circle'
+            };
+            return icons[type] || 'bell';
+        }
+        
+        // Format notification time (IST timezone)
+        function formatNotificationTime(dateString) {
+            // Parse UTC date from server
+            // If dateString doesn't have timezone, assume UTC (server sends UTC)
+            const utcDate = dateString.endsWith('Z') || dateString.includes('+') || dateString.includes('-', 10)
+                ? new Date(dateString)
+                : new Date(dateString + 'Z');
+            
+            // IST offset: UTC+5:30 = 5.5 hours
+            const istOffsetMs = 5.5 * 60 * 60 * 1000;
+            
+            // Convert notification time to IST
+            const notificationIST = new Date(utcDate.getTime() + istOffsetMs);
+            
+            // Get current time in IST
+            const nowUTC = new Date();
+            const nowIST = new Date(nowUTC.getTime() + istOffsetMs);
+            
+            // Calculate difference in seconds
+            const diffSeconds = Math.floor((nowIST.getTime() - notificationIST.getTime()) / 1000);
+            
+            // Handle negative differences (future dates - shouldn't happen but handle gracefully)
+            if (diffSeconds < 0) return 'Just now';
+            
+            // Format relative time
+            if (diffSeconds < 60) return 'Just now';
+            
+            const minutes = Math.floor(diffSeconds / 60);
+            if (minutes < 60) {
+                return minutes === 1 ? '1 min ago' : minutes + ' min ago';
+            }
+            
+            const hours = Math.floor(diffSeconds / 3600);
+            if (hours < 24) {
+                return hours === 1 ? '1 hour ago' : hours + ' hours ago';
+            }
+            
+            const days = Math.floor(diffSeconds / 86400);
+            if (days < 7) {
+                return days === 1 ? '1 day ago' : days + ' days ago';
+            }
+            
+            // For older notifications, show date in IST
+            const day = notificationIST.getUTCDate();
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = monthNames[notificationIST.getUTCMonth()];
+            const year = notificationIST.getUTCFullYear();
+            const currentYear = nowIST.getUTCFullYear();
+            
+            if (year === currentYear) {
+                return `${day} ${month}`;
+            }
+            return `${day} ${month} ${year}`;
+        }
+        
+        // Handle notification click
+        function handleNotificationClick(notificationId) {
+            // Mark as read immediately (optimistic update)
+            const notificationItem = event.currentTarget;
+            if (notificationItem) {
+                notificationItem.classList.remove('unread');
+                notificationItem.classList.add('read');
+                const dot = notificationItem.querySelector('.notification-unread-dot');
+                if (dot) dot.remove();
+            }
+            
+            fetch(`/admin/notifications/${notificationId}/redirect`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update badge count
+                        fetchUnreadCount();
+                        // Redirect
+                        window.location.href = data.redirect_url;
+                    } else {
+                        // Revert optimistic update on error
+                        if (notificationItem) {
+                            notificationItem.classList.remove('read');
+                            notificationItem.classList.add('unread');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error handling notification click:', error);
+                    // Revert optimistic update on error
+                    if (notificationItem) {
+                        notificationItem.classList.remove('read');
+                        notificationItem.classList.add('unread');
+                    }
+                });
+        }
+        
+        // Mark all as read
+        function markAllAsRead() {
+            fetch('/admin/notifications/mark-all-read', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload notifications
+                    loadNotifications();
+                    // Update badge
+                    updateNotificationBadge(0);
+                }
+            })
+            .catch(error => console.error('Error marking all as read:', error));
+        }
+        
+        // Close dropdown only when clicking outside (not when clicking inside dropdown)
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const bell = document.getElementById('notificationBell');
+            
+            // Only close if clicking outside both bell and dropdown
+            if (dropdown && dropdown.style.display !== 'none') {
+                if (!bell.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                }
+            }
+        });
+        
+        // Prevent dropdown from closing when clicking inside it
+        const dropdownElement = document.getElementById('notificationDropdown');
+        if (dropdownElement) {
+            dropdownElement.addEventListener('click', function(event) {
+                event.stopPropagation();
+            });
+        }
+        
+        // Fetch unread count on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchUnreadCount();
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

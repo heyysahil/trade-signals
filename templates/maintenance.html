@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}Under Maintenance{% endblock %}
+
+{% block content %}
+<div class="maintenance-wrap" style="min-height: 60vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2rem;">
+    <div>
+        <div style="font-size: 4rem; margin-bottom: 1rem;" aria-hidden="true">🔧</div>
+        <h1 style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-primary, #fff);">We'll be back soon</h1>
+        <p style="color: var(--text-gray, #888); font-size: 1.1rem; max-width: 400px; margin: 0 auto;">
+            Our site is currently under maintenance. Please check back shortly. Thank you for your patience.
+        </p>
+    </div>
+</div>
+{% endblock %}
