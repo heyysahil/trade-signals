@@ -1,7 +1,7 @@
 {% extends "admin/layout.html" %}
 
-{% set staff_obj = staff if staff is defined else None %}
-{% set form_obj = form if form is defined else None %}
+{% set staff_obj = staff if staff is defined else none %}
+{% set form_obj = form if form is defined else none %}
 
 {% block title %}{% if staff_obj %}Edit Staff{% else %}Add Staff{% endif %} - Admin{% endblock %}
 
