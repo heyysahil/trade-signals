@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     email_verified BOOLEAN DEFAULT TRUE
 );
 
--- Admins (staff / superadmin)
+-- Admins: superadmin + staff (sub-admins). Same table; role='superadmin' or 'admin', product_category set for sub-admins.
 CREATE TABLE IF NOT EXISTS admins (
     id SERIAL PRIMARY KEY,
     username VARCHAR(80) UNIQUE NOT NULL,

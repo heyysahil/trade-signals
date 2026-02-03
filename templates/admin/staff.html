@@ -26,9 +26,9 @@
                     <th>Name</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Product Category</th>
                     <th>Date of Joining</th>
                     <th>Status</th>
-                    <th>Password</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -44,6 +44,7 @@
                                 {{ member.role|upper }}
                             </span>
                         </td>
+                        <td>{{ member.product_category or '—' }}</td>
                         <td>{{ member.created_at.strftime('%d-%m-%Y') if member.created_at else 'N/A' }}</td>
                         <td>
                             {% if member.is_active %}
@@ -51,9 +52,6 @@
                             {% else %}
                                 <span class="admin-badge admin-badge-danger">Inactive</span>
                             {% endif %}
-                        </td>
-                        <td>
-                            <span style="font-family: monospace; color: var(--text-gray);">••••••••</span>
                         </td>
                         <td>
                             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -76,7 +74,7 @@
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="8" class="admin-empty-state">
+                        <td colspan="8" class="admin-empty-state" style="text-align: center;">
                             <p>No staff members found.</p>
                             <a href="{{ url_for('admin_staff.create_staff') }}" class="admin-btn admin-btn-primary">
                                 Add First Staff Member

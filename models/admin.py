@@ -6,7 +6,7 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class Admin(db.Model):
-    """Admin model for staff/admin accounts"""
+    """Admin model: superadmin and staff (sub-admins) in one table. role='superadmin' or 'admin'; product_category set for sub-admins."""
     __tablename__ = 'admins'
     
     id = db.Column(db.Integer, primary_key=True)
